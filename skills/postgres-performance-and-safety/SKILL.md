@@ -7,53 +7,45 @@ description: Design and review Postgres usage for correctness, transaction safet
 Protect data correctness while enabling sustainable performance and safe evolution of relational workloads.
 
 # When to use
-Use this skill when:
-- reviewing queries and transactions
-- planning schema migrations
-- diagnosing lock contention or slow queries
-- evaluating data consistency guarantees
-- designing write paths and indexes
+- Reviewing queries and transactions.
+- Planning schema migrations.
+- Diagnosing lock contention or slow queries.
+- Evaluating data consistency guarantees.
 
-# Core principles
-- Correctness comes before speed.
-- Transaction scope defines contention risk.
-- Migration safety must be deliberate.
-- Indexes are part of design, not afterthoughts.
-- Understand hot paths and hot tables explicitly.
+# Handoff
+- **Receives from:** backend-platform-engineer (implementation).
+- **Hands off to:** release-commander (for migration rollout), otel-observability-architect (query telemetry).
 
-# Assumptions audit
-Before answering, identify:
-- assumed consistency requirements
-- assumed read/write ratio
-- assumed transaction boundaries
-- assumed migration window tolerance
-- assumed table growth pattern
-- assumed indexing maturity
+# Before answering
+Identify: consistency requirements, read/write ratio, transaction boundaries, migration window tolerance, table growth pattern, indexing maturity.
 
-# Non-obvious failure checklist
-- Query acceptable alone, dangerous under concurrency
-- Transaction correctness depends on application-level timing
-- Online migration plan still causes lock pain
-- Index helps one path but harms write amplification
-- “Safe retry” duplicates side effects around DB writes
-- Cardinality or sort order assumptions break pagination or dedup logic
+# Migration safety rules
+| Operation | Risk | Safe approach |
+|---|---|---|
+| Add column with default | Rewrites table in PG < 11 | Use `ALTER TABLE ... ADD COLUMN ... DEFAULT x` (PG 11+ is safe) |
+| Add NOT NULL | Locks table for validation | Add column nullable → backfill → add constraint with `NOT VALID` → validate |
+| Add index | Locks writes | `CREATE INDEX CONCURRENTLY` |
+| Rename column | Breaks queries | Add new column → dual-write → migrate reads → drop old |
+| Drop column | Irreversible | Stop reading first → deploy → drop in next release |
+| Change column type | Locks + rewrites | Add new column → backfill → swap |
 
-# Deep evaluation checklist
-1. Query intent and correctness
-2. Cardinality and join risk
-3. Transaction scope and lock duration
-4. Read and write path efficiency
-5. Index strategy
-6. Migration safety
-7. Data lifecycle and retention
-8. Operational diagnostics
+# Transaction anti-patterns
+- Long transactions holding locks while calling external APIs.
+- `SELECT ... FOR UPDATE` on hot rows without timeout.
+- Application-level retry that creates duplicate inserts without dedup.
+- Missing `WHERE` clause on `UPDATE` or `DELETE` (no safety net).
 
-# Anti-handwaving rule
-Do not call a Postgres design “efficient” without addressing contention, indexing, and migration behavior.
+# Query review checklist
+1. Does the query have an efficient execution plan? (`EXPLAIN ANALYZE`)
+2. Are joins correct in cardinality? (1:1, 1:N, N:M)
+3. Is pagination stable under concurrent writes? (cursor > offset)
+4. Are there missing indexes on filter/join columns?
+5. Is the transaction scope as narrow as possible?
+6. Are there lock contention risks?
 
 # Output format
-- Data access assessment
-- Correctness risks
-- Performance risks
-- Migration concerns
-- Recommendations
+1. **Data access assessment**
+2. **Correctness risks** (with severity)
+3. **Performance risks** (with evidence)
+4. **Migration plan** (safe step-by-step)
+5. **Monitoring** (query latency, lock waits, index usage)

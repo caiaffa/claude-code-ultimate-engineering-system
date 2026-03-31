@@ -7,52 +7,55 @@ description: Review Kubernetes workloads for deployment safety, probe correctnes
 Make Kubernetes workloads safe to deploy, easy to diagnose, and resilient to routine cluster disruption.
 
 # When to use
-Use this skill when:
-- reviewing Kubernetes manifests or Helm charts
-- diagnosing pod health or rollout issues
-- validating autoscaling and runtime settings
-- improving cluster friendliness and service operability
+- Reviewing K8s manifests or Helm charts.
+- Diagnosing pod health or rollout issues.
+- Validating autoscaling and runtime settings.
+- Improving service operability.
 
-# Core principles
-- Probes must reflect real readiness, not wishful readiness.
-- Resource settings should be realistic and measurable.
-- Disruption tolerance must be intentional.
-- Rollouts should be safe and observable.
-- Debuggability is a design feature.
+# Handoff
+- **Receives from:** infra-devops (infrastructure review) or backend-platform-engineer (runtime needs).
+- **Hands off to:** otel-observability-architect (monitoring), release-commander (rollout plan).
 
-# Assumptions audit
-Before answering, identify:
-- assumed workload type
-- assumed startup profile
-- assumed bottleneck resource
-- assumed disruption tolerance
-- assumed autoscaling trigger quality
-- assumed cluster resource pressure
+# Probe rules
+| Probe | Purpose | Common mistake |
+|---|---|---|
+| `readinessProbe` | "Can this pod serve traffic?" | Returns 200 before DB/cache connected |
+| `livenessProbe` | "Is this pod stuck?" | Same as readiness (causes restart loops) |
+| `startupProbe` | "Has this pod finished booting?" | Missing for slow-starting apps (liveness kills during boot) |
 
-# Non-obvious failure checklist
-- Readiness passes before downstream dependencies are usable
-- Requests too low cause noisy-neighbor instability
-- HPA scales on the wrong signal
-- Graceful shutdown absent, causing lost work during termination
-- Liveness probe hides slow-start problems
-- Deployment safe in green conditions, fragile under node pressure
+**Rule:** Readiness should check actual dependency availability. Liveness should only check if the process is stuck (not dependency health — a slow DB shouldn't restart all pods).
 
-# Deep evaluation checklist
-1. Probe correctness and meaning
-2. Requests and limits realism
-3. Shutdown and termination handling
-4. Rollout strategy safety
-5. Config and secret externalization
-6. Autoscaling fitness
-7. Resilience to pod or node disruption
-8. Diagnostic visibility
+# Resource settings
+```yaml
+resources:
+  requests:    # What the scheduler guarantees — base on p50 usage
+    cpu: 250m
+    memory: 256Mi
+  limits:      # Hard ceiling — base on p99 + headroom
+    cpu: 1000m       # Or omit CPU limit (throttling is worse than burst)
+    memory: 512Mi    # Always set memory limit (OOM is better than node pressure)
+```
 
-# Anti-handwaving rule
-Do not call a workload “healthy” unless you assess probes, resources, disruption handling, and observability.
+# Red flags
+- `requests` = `limits` (no burst room, constant throttling).
+- No `requests` set (scheduler can't make good decisions).
+- Memory limit 10x requests (pod might get scheduled on an overloaded node).
+- HPA scaling on CPU when the bottleneck is I/O or queue depth.
+- No PodDisruptionBudget on critical services.
+- `terminationGracePeriodSeconds` still at default 30s for services that need longer shutdown.
+- Liveness probe with aggressive timeout that kills healthy-but-busy pods.
+
+# Graceful shutdown checklist
+1. SIGTERM received → stop accepting new requests.
+2. Finish in-flight requests (within `terminationGracePeriodSeconds`).
+3. Close database connections cleanly.
+4. Deregister from service discovery (readiness goes false).
+5. Exit 0.
 
 # Output format
-- K8s health assessment
-- Misconfigurations
-- Reliability improvements
-- Scaling notes
-- Diagnostic gaps
+1. **K8s health assessment** (ready / has issues / critical)
+2. **Probe corrections** (specific fixes)
+3. **Resource tuning** (based on actual usage if available)
+4. **Disruption tolerance** (PDB, rollout strategy, grace period)
+5. **Scaling assessment** (HPA signal quality)
+6. **Diagnostic gaps** (what's hard to debug today)

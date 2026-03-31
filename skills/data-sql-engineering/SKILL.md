@@ -7,53 +7,40 @@ description: Review and generate SQL and data operations with strong attention t
 Improve the quality of analytical and operational data work while preventing silent correctness errors and unsafe data operations.
 
 # When to use
-Use this skill when:
-- writing SQL
-- reviewing data pipelines
-- creating reports or analyses
-- validating joins and aggregations
-- planning data migrations or backfills
+- Writing or reviewing SQL.
+- Reviewing data pipelines.
+- Creating reports or analyses.
+- Validating joins and aggregations.
+- Planning data migrations or backfills.
 
-# Core principles
-- Clarify the business question first.
-- Cardinality mistakes are correctness bugs.
-- Distinguish exploratory SQL from production SQL.
-- Make destructive operations deliberate and auditable.
-- Prefer validation queries over confidence by inspection.
+# Handoff
+- **Receives from:** backend-platform-engineer (data layer) or principal-engineer (analytics need).
+- **Hands off to:** postgres-performance-and-safety (if Postgres-specific), release-commander (if migration).
 
-# Assumptions audit
-Before answering, identify:
-- assumed business question
-- assumed source-of-truth tables
-- assumed uniqueness/cardinality relationships
-- assumed time semantics
-- assumed acceptable query cost
-- assumed data freshness expectations
+# Before answering
+Identify: business question, source-of-truth tables, uniqueness/cardinality relationships, time semantics, acceptable query cost, data freshness expectations.
 
-# Non-obvious failure checklist
-- Join duplicates inflate counts silently
-- Filtering logic changes meaning subtly
-- Timestamp timezone assumptions break results
-- Production query reused from exploratory prototype
-- Backfill logic idempotency not considered
-- Validation omitted because output “looks right”
+# Common SQL traps
+| Trap | What goes wrong | Prevention |
+|---|---|---|
+| Join inflation | 1:N join silently doubles counts | Check cardinality before joining; use `COUNT(DISTINCT)` |
+| Missing WHERE on UPDATE/DELETE | Affects all rows | Always include WHERE; test with SELECT first |
+| Timezone mismatch | UTC vs local produces wrong date grouping | Explicit `AT TIME ZONE` everywhere |
+| Offset pagination on live data | Skips or duplicates rows | Use cursor-based pagination |
+| SUM on joined data | Sums inflated by join fanout | Aggregate before joining, or use subqueries |
 
-# Deep evaluation checklist
-1. Define the objective.
-2. Identify source tables and relationships.
-3. Evaluate join and aggregation risks.
-4. Propose main query strategy.
-5. Suggest validation queries.
-6. Note performance concerns and indexing implications.
-7. Note destructive or migration risks if applicable.
-
-# Anti-handwaving rule
-Do not say a query is “correct” without addressing joins, cardinality, and validation.
+# Validation discipline
+Every query that produces a business number should have:
+1. **Row count check** — does the count match expectations?
+2. **Null check** — are there unexpected NULLs affecting aggregations?
+3. **Duplicate check** — `COUNT(*)` vs `COUNT(DISTINCT pk)` — same number?
+4. **Boundary check** — does the date range cover what you think?
+5. **Sanity check** — does the result make business sense?
 
 # Output format
-- Objective
-- Query strategy
-- Main SQL or data plan
-- Validation checks
-- Performance notes
-- Safety notes
+1. **Objective** (what business question this answers)
+2. **Query strategy** (approach, key joins, aggregation logic)
+3. **Main SQL** (with comments on non-obvious logic)
+4. **Validation queries** (at least 2)
+5. **Performance notes** (indexes needed, expected cost)
+6. **Safety notes** (if destructive operations involved)

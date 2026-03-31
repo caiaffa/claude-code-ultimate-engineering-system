@@ -7,58 +7,49 @@ description: Investigate bugs using structured root-cause analysis, evidence-dri
 Replace guesswork with evidence. Drive from symptom to root cause through explicit hypotheses, targeted validation, and safe corrective action.
 
 # When to use
-Use this skill when:
-- behavior differs from expectations
-- production incidents or local bugs occur
-- issues are intermittent or timing-dependent
-- failures span multiple layers or services
-- logs exist but cause is unclear
+- Behavior differs from expectations.
+- Production incidents or local bugs.
+- Intermittent or timing-dependent issues.
+- Failures spanning multiple layers or services.
 
-# Core principles
-- State the problem precisely.
-- Separate symptom from cause.
-- Validate hypotheses with evidence.
-- Prefer narrowing the search space over changing code blindly.
-- Treat reproduction quality as part of debugging quality.
+# Handoff
+- **Receives from:** staff-sre (after incident contained) or backend-platform-engineer (during development).
+- **Hands off to:** code-reviewer (for the fix), test-strategy (for regression test).
 
-# Assumptions audit
-Before answering, identify:
-- assumed expected behavior
-- assumed environment where the issue occurs
-- assumed recent changes
-- assumed observability quality
-- assumed dependency health
-- assumed concurrency or timing sensitivity
+# The method
+```
+1. STATE the problem precisely (expected vs actual)
+2. GATHER context (recent changes, environment, timing)
+3. HYPOTHESIZE (list 3-5 causes, ranked by probability)
+4. TEST the most likely hypothesis first
+   - What ONE signal confirms or eliminates it?
+   - Check that signal.
+5. NARROW — eliminate hypotheses, don't collect more data randomly
+6. VERIFY — confirm root cause with independent evidence
+7. FIX with minimal blast radius
+8. VALIDATE — regression test + monitor
+```
 
-# Non-obvious failure checklist
-- Multiple issues producing the same symptom
-- Partial failure hidden behind retries
-- Environment mismatch between local and production
-- Stale queues, caches, or configuration
-- Timeouts masking downstream slowness
-- Race conditions that disappear under logging or debugging
-- “Fixed by restart” but only temporarily
+# Red flags — you're debugging wrong if
+- You changed code before having a hypothesis.
+- You're reading logs without knowing what you're looking for.
+- You said "that's weird" more than twice without writing a hypothesis.
+- You restarted the service and called it fixed.
+- You're debugging in production without a rollback plan.
 
-# Deep evaluation checklist
-1. Restate the issue precisely.
-2. Define expected vs actual behavior.
-3. List likely hypotheses and rank them.
-4. Map each hypothesis to evidence needed.
-5. Propose the minimum checks to isolate the cause.
-6. Identify likely root cause and why it produces the symptom.
-7. Propose the fix and its blast radius.
-8. Define post-fix validation.
-9. Note regression risks and hidden side effects.
-
-# Anti-handwaving rule
-Do not jump from symptom to fix without explicitly stating the evidence chain.
+# Common traps
+- Multiple issues producing the same symptom.
+- Partial failure hidden behind retries (looks like intermittent).
+- Environment mismatch (works locally, breaks in prod).
+- Stale caches, queues, or config masking the real state.
+- Race conditions that disappear under debugging/logging.
+- "Fixed by restart" but the allocating pattern still exists.
 
 # Output format
-- Problem statement
-- Expected vs actual
-- Ranked hypotheses
-- Investigation plan
-- Likely root cause
-- Proposed fix
-- Validation plan
-- Regression risks
+1. **Problem statement** (precise: expected X, got Y, in context Z)
+2. **Hypotheses** (ranked by probability, each with confirmation signal)
+3. **Investigation steps** (ordered, minimal)
+4. **Root cause** (with evidence chain)
+5. **Fix** (with blast radius assessment)
+6. **Regression test** (specific scenario)
+7. **Monitoring** (what to watch post-fix)

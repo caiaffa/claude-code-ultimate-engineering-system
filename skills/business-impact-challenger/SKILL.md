@@ -7,51 +7,38 @@ description: Evaluate whether a proposal is tied to a real business metric, a cr
 Force product and engineering work to justify itself in measurable business terms.
 
 # When to use
-Use this skill when:
-- reviewing PRDs or initiative proposals
-- checking expected business gain
-- validating baseline metrics and success criteria
-- assessing whether the work is worth doing now
+- Reviewing PRDs or initiative proposals.
+- Checking expected business gain.
+- Validating baseline metrics and success criteria.
+- Assessing whether the work is worth doing now.
 
-# Core principles
-- No baseline, no strong impact claim.
-- No expected gain, no strong prioritization case.
-- Primary metric, secondary metrics, and guardrails must all be explicit.
-- Cost and operational burden matter.
+# Handoff
+- **Receives from:** principal-engineer (after initial PRD review) or prd-challenger.
+- **Hands off to:** prd-metrics-reviewer (measurement plan) or decision-quality-auditor (final gate).
 
-# Assumptions audit
-Before answering, identify:
-- assumed business metric
-- assumed baseline quality
-- assumed expected gain magnitude
-- assumed implementation cost
-- assumed operating cost
-- assumed time horizon to observe impact
+# Before answering
+Identify: assumed business metric, assumed baseline quality, assumed expected gain magnitude, assumed implementation cost, assumed operating cost, assumed time horizon to observe impact.
 
-# Non-obvious failure checklist
-- metric chosen does not really represent value
-- gain claim has no mechanism
-- initiative optimizes one metric while harming another
-- time to impact is unrealistic
-- operational burden exceeds the value delivered
+# The 5 questions that kill weak proposals
+1. **"Show me the number."** — What metric are you improving? What is it today?
+2. **"By how much?"** — What specific gain do you expect? 5%? 50%?
+3. **"Why will this work?"** — What mechanism connects your solution to the gain?
+4. **"What's the cost?"** — Build cost + operating cost + opportunity cost?
+5. **"What if it doesn't work?"** — How will you know? When will you kill it?
 
-# Deep evaluation checklist
-1. What business metric is affected?
-2. What is the current baseline?
-3. What gain is expected?
-4. What mechanism explains the gain?
-5. What are the guardrails?
-6. What does this cost to build and operate?
-7. Is the value big enough to justify the effort?
-8. What happens if no impact appears?
-
-# Anti-handwaving rule
-Do not accept value statements without baseline, expected gain, and measurement plan.
+# Red flags
+- "Improve user experience" without a metric.
+- "Reduce friction" without measuring current friction.
+- Gain claim with no causal mechanism.
+- Primary metric chosen is a vanity metric (pageviews, signups without activation).
+- No guardrail metrics (optimizing conversion but ignoring support burden).
+- Time to impact is "we'll see after launch."
+- Cost section says "2 sprints" without operating costs.
 
 # Output format
-- business impact assessment
-- baseline quality
-- gain hypothesis strength
-- guardrail adequacy
-- value vs cost judgment
-- recommendation
+1. **Business impact assessment** (strong / weak / missing)
+2. **Baseline quality** (measured / estimated / absent)
+3. **Gain hypothesis strength** (credible mechanism / hand-waving / absent)
+4. **Guardrail adequacy** (present / partial / missing)
+5. **Value vs cost judgment** (worth it / marginal / not justified)
+6. **Verdict:** approve / adjust / reject with specific reasons

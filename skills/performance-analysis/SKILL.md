@@ -7,53 +7,51 @@ description: Analyze bottlenecks and recommend evidence-based improvements acros
 Improve performance by identifying true bottlenecks, validating with measurements, and avoiding cargo-cult optimizations.
 
 # When to use
-Use this skill when:
-- latency is high
-- throughput is low
-- CPU or memory usage spikes
-- queues grow unexpectedly
-- database performance degrades
-- scaling costs increase
+- Latency is high or throughput is low.
+- CPU or memory usage spikes.
+- Queues grow unexpectedly.
+- Database performance degrades.
+- Scaling costs increase.
 
-# Core principles
-- Measure before concluding.
-- Isolate the slow layer.
-- Prefer high-leverage optimizations first.
-- Evaluate trade-offs and side effects.
-- Validate improvements with before/after metrics.
+# Handoff
+- **Receives from:** staff-sre (production concern) or backend-platform-engineer (performance requirement).
+- **Hands off to:** postgres-performance-and-safety (if DB bottleneck), node-runtime-reliability (if runtime issue), kubernetes-operability (if scaling issue).
 
-# Assumptions audit
-Before answering, identify:
-- assumed performance symptom
-- assumed bottleneck layer
-- assumed traffic pattern
-- assumed resource limits
-- assumed latency or throughput goals
-- assumed observability quality
+# The performance investigation method
+```
+1. DEFINE the problem → "P99 latency increased from 200ms to 800ms on /api/orders"
+2. MEASURE → Where is the time spent? (trace breakdown, flame graph, metrics)
+3. IDENTIFY the bottleneck layer:
+   - Application code? (CPU profiling)
+   - Database? (slow query log, EXPLAIN ANALYZE)
+   - Network? (cross-service latency, DNS)
+   - Queue? (backlog, processing time)
+   - Infrastructure? (CPU throttling, memory pressure, disk I/O)
+4. FIX the real bottleneck (not what you assume)
+5. VALIDATE with before/after measurements
+```
 
-# Non-obvious failure checklist
-- Local code optimization when bottleneck is DB or queue
-- CPU symptoms caused by retries or serialization overhead
-- Caching helps latency but harms correctness or invalidation
-- Faster code but worse operability
-- Scaling horizontally hides hot partitions or locks
-- Benchmark not representative of production workload
+# Common performance traps
+| What it looks like | What it actually is |
+|---|---|
+| "App is slow" | One SQL query scanning a full table |
+| "Need more instances" | N+1 query creating 100 DB calls per request |
+| "CPU is high" | Serialization/deserialization of large payloads |
+| "Cache isn't helping" | Cache hit rate is 30% due to high cardinality keys |
+| "Queue is backed up" | One poison job blocking the entire queue |
+| "Memory keeps growing" | Event listener not being removed |
 
-# Deep evaluation checklist
-1. Define the performance problem.
-2. Identify likely bottleneck layers.
-3. State measurements needed.
-4. Propose likely wins vs speculative changes.
-5. Compare trade-offs.
-6. Define validation metrics and expected impact.
-
-# Anti-handwaving rule
-Do not say “optimize” without naming the bottleneck, the mechanism, and the validation metric.
+# Red flags — you're optimizing wrong if
+- You're optimizing code before checking the database.
+- You're adding cache without measuring hit rate.
+- You're scaling horizontally when the bottleneck is a single row lock.
+- You're micro-optimizing a function that accounts for 0.1% of latency.
+- You're benchmarking with data that doesn't match production.
 
 # Output format
-- Problem definition
-- Suspected bottlenecks
-- Measurements needed
-- Recommended optimizations
-- Trade-offs
-- Validation plan
+1. **Problem definition** (specific: what metric, what threshold, what changed)
+2. **Bottleneck analysis** (evidence-based: where time/resources are spent)
+3. **Root cause** (the actual bottleneck, not the symptom)
+4. **Recommended fixes** (ranked by impact/effort ratio)
+5. **Trade-offs** (what each fix costs or risks)
+6. **Validation plan** (how to confirm the fix worked)

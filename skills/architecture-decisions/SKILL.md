@@ -7,55 +7,43 @@ description: Evaluate technical options with explicit trade-offs across reliabil
 Produce architecture recommendations grounded in constraints, trade-offs, and system consequences rather than technical preference.
 
 # When to use
-Use this skill when:
-- choosing between implementation approaches
-- deciding service boundaries
-- evaluating platform or infrastructure changes
-- comparing synchronous vs asynchronous patterns
-- writing ADRs or design decisions
+- Choosing between implementation approaches.
+- Deciding service boundaries.
+- Evaluating platform or infrastructure changes.
+- Comparing sync vs async patterns.
+- Writing ADRs or design decisions.
 
-# Core principles
-- Start from the problem and constraints.
-- Compare realistic options, not strawmen.
-- Make trade-offs explicit.
-- Optimize for system value, not elegance alone.
-- Prefer reversible decisions when uncertainty is high.
+# Handoff
+- **Receives from:** CLAUDE.md orchestrator (architecture category).
+- **Hands off to:** adr-challenger (for challenge), then backend-platform-engineer (for implementation).
 
-# Assumptions audit
-Before answering, identify:
-- assumed business urgency
-- assumed scale and traffic profile
-- assumed team maturity
-- assumed operational burden tolerance
-- assumed budget and cost sensitivity
-- assumed compatibility requirements
+# Before answering
+Identify: business urgency, scale/traffic profile, team maturity, operational burden tolerance, budget sensitivity, compatibility requirements.
 
-# Non-obvious failure checklist
-- Elegant design but poor reversibility
-- Low infrastructure cost, high cognitive load
-- Good local optimization, bad system operability
-- Hidden dependency on team discipline
-- Architecture depends on ideal observability that does not exist
-- Performance assumptions unvalidated
+# Decision framework
+For each option, evaluate on these axes (1-5 scale):
+- **Complexity to build** — how hard to implement correctly?
+- **Complexity to operate** — how hard to run, debug, and maintain?
+- **Reliability** — what happens when things go wrong?
+- **Performance** — does it meet latency/throughput needs?
+- **Cost** — build cost + run cost + maintenance cost?
+- **Reversibility** — how hard to undo if wrong?
+- **Security** — does it increase or decrease attack surface?
+- **Team fit** — can this team realistically build and operate this?
 
-# Deep evaluation checklist
-1. State the problem clearly.
-2. List relevant constraints.
-3. Identify candidate options.
-4. Compare trade-offs: complexity, reliability, operability, performance, cost, security, DX.
-5. Explain why one option is preferred.
-6. List risks and failure scenarios.
-7. Suggest follow-up validation or rollout strategy.
-
-# Anti-handwaving rule
-Do not call a design “scalable” or “robust” unless you name the mechanisms that make it so.
+# Red flags
+- Solution chosen before problem is clearly stated.
+- Only one option seriously considered.
+- "We can optimize later" for a known bottleneck.
+- Architecture requires discipline the team hasn't demonstrated.
+- Elegant design with no operational story.
 
 # Output format
-- Context
-- Problem
-- Constraints
-- Options considered
-- Trade-off analysis
-- Recommendation
-- Risks
-- Follow-up actions
+1. **Context** (what is happening)
+2. **Problem** (what specifically needs deciding)
+3. **Constraints** (hard limits)
+4. **Options considered** (minimum 2 real options)
+5. **Trade-off matrix** (axes above, scored)
+6. **Recommendation** with justification
+7. **Risks** with severity and mitigation
+8. **Follow-up actions** with owner

@@ -7,53 +7,54 @@ description: Refactor code safely through behavior preservation, protective test
 Improve code structure without silently changing system behavior or increasing delivery risk.
 
 # When to use
-Use this skill when:
-- cleaning up legacy code
-- extracting modules or services
-- reducing coupling
-- introducing clearer abstractions
-- reorganizing domain boundaries
+- Cleaning up legacy code.
+- Extracting modules or services.
+- Reducing coupling.
+- Introducing clearer abstractions.
+- Reorganizing domain boundaries.
 
-# Core principles
-- Preserve behavior intentionally.
-- Protect before changing.
-- Prefer incremental refactors over rewrites.
-- Separate structure improvement from behavior change.
-- Make contract changes explicit.
+# Handoff
+- **Receives from:** code-reviewer (identified tech debt) or backend-platform-engineer (planned improvement).
+- **Hands off to:** test-strategy (protective tests), code-reviewer (review the refactor), release-commander (if affects production behavior).
 
-# Assumptions audit
-Before answering, identify:
-- assumed current behavior
-- assumed callers and consumers
-- assumed side effects and shared dependencies
-- assumed observability available during rollout
-- assumed test coverage maturity
-- assumed migration tolerance
+# The safe refactoring method
+```
+1. CHARACTERIZE → Write tests that capture current behavior (before changing anything)
+2. IDENTIFY → What exactly needs to change? What must stay the same?
+3. PLAN → Break the refactor into small, independently-mergeable steps
+4. EXECUTE → One step at a time. Each step: green tests → change → green tests
+5. VALIDATE → Run full test suite. Check no behavioral regression.
+6. DEPLOY → Ship incrementally. Monitor for unexpected changes.
+```
 
-# Non-obvious failure checklist
-- Refactor changes error semantics
-- Caller depends on accidental behavior
-- Timing changes affect distributed flows
-- Implicit data transformation or validation changes
-- Public interface remains same but compatibility still breaks
-- Refactor removes useful diagnostics
+# Refactor vs rewrite decision
+| Choose refactor when | Choose rewrite when |
+|---|---|
+| Core behavior is correct, structure is bad | Core behavior is wrong |
+| Tests exist or can be written | System is so tangled tests can't be written |
+| Team needs to maintain it during refactor | Clean break is possible (new service, new module) |
+| Incremental delivery is possible | All-or-nothing is the only realistic path |
 
-# Deep evaluation checklist
-1. Identify current pain points.
-2. Define behavior and contracts that must remain unchanged.
-3. Identify risky dependencies and side effects.
-4. Recommend protective tests first.
-5. Propose incremental refactor steps.
-6. Define migration strategy if contracts shift.
-7. List validation and rollback considerations.
+**Default to refactor.** Rewrites are almost always more expensive than estimated.
 
-# Anti-handwaving rule
-Do not recommend a rewrite unless you explain why incremental refactoring is insufficient.
+# Common refactoring pitfalls
+- Changing behavior accidentally while restructuring.
+- Removing "unused" code that's actually called via reflection or config.
+- Breaking error semantics (different exception types, different HTTP codes).
+- Changing timing that affects distributed flows.
+- Losing observability (spans, metrics, log lines removed).
+
+# Red flags — stop and reassess if
+- You can't write a characterization test for the current behavior.
+- The refactor touches more than 3 modules simultaneously.
+- The refactor requires coordinated changes across services.
+- There's no way to deploy the refactor incrementally.
+- You find yourself saying "while we're at it, let's also..."
 
 # Output format
-- Current problems
-- Preserved behavior/contracts
-- Refactor strategy
-- Protective tests
-- Migration notes
-- Risk assessment
+1. **Current problems** (what's wrong with the current structure)
+2. **Preserved behavior** (what must not change)
+3. **Refactor strategy** (numbered steps, each independently mergeable)
+4. **Protective tests** (what to write before starting)
+5. **Risk assessment** (what could go wrong, how to detect it)
+6. **Migration plan** (if contracts or APIs change)

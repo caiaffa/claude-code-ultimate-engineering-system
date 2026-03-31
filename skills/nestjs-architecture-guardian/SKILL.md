@@ -7,52 +7,51 @@ description: Enforce clean NestJS architecture, module boundaries, provider disc
 Protect NestJS services from architectural entropy, framework misuse, and business logic leakage.
 
 # When to use
-Use this skill when:
-- designing or reviewing NestJS modules
-- implementing new features in NestJS
-- refactoring NestJS services
-- evaluating layering and dependency discipline
+- Designing or reviewing NestJS modules.
+- Implementing new features.
+- Refactoring NestJS services.
+- Evaluating layering and dependency discipline.
 
-# Core principles
-- Controllers orchestrate; they do not own business rules.
-- Business logic belongs in application or domain services.
-- Repositories abstract persistence concerns.
-- Integrations live behind adapters.
-- Modules expose intentional contracts, not incidental internals.
-- DTOs must not become domain models.
+# Handoff
+- **Receives from:** backend-platform-engineer (implementation task).
+- **Hands off to:** code-reviewer (for review), test-strategy (for test plan).
 
-# Assumptions audit
-Before answering, identify:
-- assumed module boundaries
-- assumed transport layers in use
-- assumed ORM or persistence strategy
-- assumed validation approach
-- assumed event or async workflow usage
-- assumed shared library boundaries
+# Layer rules
+```
+Controller (thin) → Application Service → Domain Service → Repository
+     ↓                    ↓                     ↓              ↓
+  Transport          Orchestration         Business rules    Persistence
+  Validation         Use cases             Pure logic        Data access
+  Auth guards        Event emission        No framework      No business logic
+```
 
-# Non-obvious failure checklist
-- Fat services acting as controllers plus domain plus persistence
-- DTOs, entities, and domain concepts collapsing into one type
-- Cross-module imports bypassing public contracts
-- Dynamic modules hiding ownership or lifecycle issues
-- Interceptors or guards accumulating business logic
-- “Common” modules becoming dependency dumping grounds
+# What belongs where
+| Layer | YES | NO |
+|---|---|---|
+| Controller | Route, validate DTO, call service, return response | Business rules, DB queries, event logic |
+| Application Service | Orchestrate use case, call domain + repo, emit events | HTTP concepts, raw SQL, framework decorators |
+| Domain Service | Business rules, calculations, validations | DB calls, HTTP, queue, framework imports |
+| Repository | Query, save, transaction management | Business rules, validation, HTTP |
+| DTO | Input/output shape for transport | Domain model replacement |
+| Entity/Model | Database shape | Business logic, validation rules |
 
-# Deep evaluation checklist
-1. Are controllers thin and transport-focused?
-2. Are business rules isolated from persistence and transport?
-3. Are module boundaries cohesive and explicit?
-4. Are providers exposing too much implementation detail?
-5. Are DTOs leaking into domain logic?
-6. Are circular dependencies or hidden coupling present?
-7. Is the design improving long-term changeability?
+# Red flags
+- Controller with more than 15 lines of logic.
+- Service that imports `@Res()`, `@Req()`, or HTTP-specific types.
+- Repository that contains `if` statements about business rules.
+- DTO class reused as domain model throughout the codebase.
+- "Common" or "shared" module with 20+ exports.
+- Circular dependency between modules.
+- Guard or interceptor containing business logic.
 
-# Anti-handwaving rule
-Do not call a NestJS codebase “clean” unless you identify actual boundaries, rule placement, and dependency discipline.
+# Module boundary check
+- Can this module be extracted to a separate package without breaking others?
+- Does this module export only what other modules actually need?
+- Are cross-module imports going through the public API (exported services), not internal files?
 
 # Output format
-- Architectural assessment
-- Boundary violations
-- Refactor recommendations
-- Coupling risks
-- Suggested target structure
+1. **Architectural assessment** (clean / has drift / needs refactor)
+2. **Boundary violations** (specific file + line if possible)
+3. **Layer misplacements** (what's in the wrong layer, where it should go)
+4. **Coupling risks** (hidden dependencies)
+5. **Suggested target structure** (concrete folder/file layout)

@@ -7,52 +7,47 @@ description: Evaluate technical decisions through explicit trade-offs in cost, d
 Optimize for overall engineering value rather than technical vanity or narrow local optimization.
 
 # When to use
-Use this skill when:
-- comparing solution approaches
-- deciding build vs buy
-- evaluating platform or architecture complexity
-- choosing between speed and rigor
-- making prioritization trade-offs
+- Comparing solution approaches.
+- Deciding build vs buy.
+- Evaluating platform or architecture complexity.
+- Choosing between speed and rigor.
+- Making prioritization trade-offs.
 
-# Core principles
-- Every design has a cost surface.
-- Lower runtime cost can raise maintenance cost.
-- Faster delivery can increase long-term burden.
-- Team cognitive load is an engineering cost.
-- Reversibility has strategic value.
+# Handoff
+- **Receives from:** principal-engineer (architecture decision) or decision-quality-auditor (value question).
+- **Hands off to:** architecture-decisions (if design needed), release-planning (if approved).
 
-# Assumptions audit
-Before answering, identify:
-- assumed urgency
-- assumed budget sensitivity
-- assumed long-term ownership model
-- assumed team skill distribution
-- assumed reliability payoff needed
-- assumed reversibility value
+# The cost model
+Every solution has 5 cost dimensions. Cheap on one axis often means expensive on another:
 
-# Non-obvious failure checklist
-- Cheap to launch, expensive to operate
-- Elegant architecture with high team cognitive load
-- Low infra bill but high incident burden
-- Fast delivery that creates deep future lock-in
-- Platform investment before demand is proven
-- Reliability spend without clear business value
+```
+1. BUILD COST     → How long to implement correctly?
+2. RUN COST       → Infrastructure + third-party fees?
+3. MAINTAIN COST  → Bug fixes, upgrades, on-call burden?
+4. COGNITIVE COST → How hard for the team to understand and change?
+5. OPPORTUNITY COST → What else could the team be doing instead?
+```
 
-# Deep evaluation checklist
-1. Build cost
-2. Run cost
-3. Maintenance burden
-4. Reliability payoff
-5. Team cognitive load
-6. Reversibility
-7. Time-to-value
-8. Why alternatives lose
+# Common economic traps
+| Trap | Example | Better frame |
+|---|---|---|
+| Cheap to build, expensive to operate | Custom job scheduler | Use BullMQ — boring but maintained |
+| Elegant but high cognitive load | Event sourcing for a CRUD app | Simple state machine |
+| Optimizing too early | Building for 100x scale at 10 users | Design for 10x, instrument to know when to scale |
+| Build when buy exists | Custom auth system | Auth0/Cognito unless specific need |
+| Sunk cost | "We already built half of it" | Evaluate remaining cost vs alternatives |
 
-# Anti-handwaving rule
-Do not say a solution is “best” without defining what objective function it is best for.
+# Decision heuristic
+```
+IF uncertainty is high → prefer reversible decisions
+IF team is small → prefer lower cognitive load
+IF timeline is tight → prefer boring technology
+IF cost sensitivity is high → prefer managed services
+IF correctness is critical → prefer simplicity over cleverness
+```
 
 # Output format
-- Decision economics
-- Trade-off summary
-- Recommended option
-- Why not the alternatives
+1. **Decision economics** (5 cost dimensions for each option)
+2. **Trade-off summary** (what you gain and lose with each option)
+3. **Recommended option** (with justification tied to constraints)
+4. **Why not the alternatives** (concrete reasons, not "it's not as good")

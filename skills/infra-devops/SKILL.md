@@ -7,52 +7,44 @@ description: Review and improve infrastructure, CI/CD, runtime configuration, de
 Raise the quality of delivery systems and runtime environments so software is not only built, but reliably shipped and operated.
 
 # When to use
-Use this skill when:
-- reviewing pipelines
-- improving deployment safety
-- validating secrets/config handling
-- checking runtime health and autoscaling
-- evaluating infra drift or IaC quality
+- Reviewing CI/CD pipelines.
+- Improving deployment safety.
+- Validating secrets/config handling.
+- Checking runtime health and autoscaling.
+- Evaluating IaC drift or quality.
 
-# Core principles
-- Delivery systems are part of the product.
-- Favor reproducibility and explicitness.
-- Externalize config safely.
-- Keep runtime assumptions inspectable.
-- Prefer operational clarity over cleverness.
+# Handoff
+- **Receives from:** backend-platform-engineer (deployment needs) or release-commander (rollout planning).
+- **Hands off to:** kubernetes-operability (if K8s), aws-production-systems (if AWS), release-commander (deploy readiness).
 
-# Assumptions audit
-Before answering, identify:
-- assumed deployment model
-- assumed environment parity expectations
-- assumed secret management system
-- assumed rollback requirements
-- assumed cluster or runtime constraints
-- assumed ownership model
+# CI/CD quality checklist
+1. **Build reproducibility** — same commit always produces same artifact?
+2. **Test gates** — what tests must pass before deploy? any flaky tests bypassed?
+3. **Security scan** — dependency vulnerabilities checked? secrets scanning?
+4. **Artifact immutability** — build once, deploy everywhere (no rebuild per env)?
+5. **Deploy safety** — canary/rolling? automatic rollback on failure?
+6. **Pipeline speed** — < 10 min for PR checks? < 20 min for full deploy?
 
-# Non-obvious failure checklist
-- CI green but deployment unsafe
-- Drift between IaC and actual runtime state
-- Secret rotation impossible in practice
-- Environment parity claimed but not real
-- Health checks pass despite degraded service
-- Rollback blocked by config or schema mismatch
+# Config and secret hygiene
+| Good | Bad |
+|---|---|
+| Secrets in Vault/SSM/Secrets Manager | Secrets in env files in repo |
+| Config externalized, environment-specific | Config hardcoded, differs by branch |
+| Secret rotation tested and automated | Secrets rotated manually once a year |
+| Config validated at startup | App starts with missing config, fails later |
 
-# Deep evaluation checklist
-1. Build pipeline quality
-2. Deployment safety
-3. Config and secret handling
-4. Runtime health checks
-5. Scaling and resource configuration
-6. IaC maintainability
-7. Operational visibility
-8. Rollback practicality
-
-# Anti-handwaving rule
-Do not describe infra as “solid” without evaluating deployment safety, runtime health, and recovery paths.
+# Red flags
+- CI passes but deploy is a manual script.
+- "Works on staging" but staging is months behind production.
+- Health check returns 200 always, regardless of dependency state.
+- Rollback requires manual database changes.
+- IaC exists but actual infrastructure has drifted.
+- Secret rotation would require downtime.
 
 # Output format
-- Current infra/deployment view
-- Key risks
-- Recommendations
-- Suggested rollout order
+1. **Pipeline assessment** (build, test, deploy quality)
+2. **Config/secret hygiene** (risks found)
+3. **Runtime health** (probes, scaling, resource config)
+4. **Key risks** (prioritized by blast radius)
+5. **Recommendations** (with implementation order)
+6. **Rollback practicality** (can we actually roll back?)

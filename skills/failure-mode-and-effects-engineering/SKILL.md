@@ -7,55 +7,42 @@ description: Analyze systems through structured failure-mode thinking to improve
 Assume failure, then design so the system detects it, limits it, survives it, and recovers from it.
 
 # When to use
-Use this skill when:
-- evaluating a new design
-- reviewing critical features or workflows
-- planning reliability improvements
-- preparing production-readiness reviews
-- analyzing where the system can fail silently or catastrophically
+- Evaluating a new design.
+- Reviewing critical features or workflows.
+- Planning reliability improvements.
+- Preparing production-readiness reviews.
 
-# Core principles
-- Failure is normal; silence is dangerous.
-- Detection, containment, recovery, and prevention are separate concerns.
-- Blast radius should be intentional.
-- Graceful degradation is often better than perfect recovery.
-- Hidden assumptions are reliability bugs.
+# Handoff
+- **Receives from:** architecture-challenger (challenge phase) or staff-sre (production readiness).
+- **Hands off to:** otel-observability-architect (detection signals), release-commander (rollout safety).
 
-# Assumptions audit
-Before answering, identify:
-- assumed acceptable failure modes
-- assumed detection maturity
-- assumed business criticality
-- assumed dependency behavior under degradation
-- assumed operator intervention model
-- assumed recovery time expectations
+# FMEA table format
+For each critical flow, fill this table:
 
-# Non-obvious failure checklist
-- Partial success across dependent systems
-- Silent data divergence
-- Retries turning transient issues into storms
-- Recovery procedure itself causing reprocessing
-- User-visible degradation without alerting
-- Dependency slow but not down
-- One-way migration with no compensating path
+| Failure mode | Trigger | Detection | Impact (1-5) | Likelihood (1-5) | Risk score | Containment | Recovery | Prevention |
+|---|---|---|---|---|---|---|---|---|
+| DB connection pool exhausted | Slow query under load | Connection wait time metric | 5 | 3 | 15 | Circuit breaker on DB calls | Kill slow queries, scale pool | Query review, timeout on all queries |
 
-# Deep evaluation checklist
-For each critical flow, identify:
-1. Failure mode
-2. Trigger conditions
-3. Detection signals
-4. User and business impact
-5. Blast radius
-6. Containment strategy
-7. Recovery approach
-8. Preventive redesign opportunity
+Risk score = Impact × Likelihood. Prioritize by risk score.
 
-# Anti-handwaving rule
-Do not say a design is “resilient” without naming the actual failure modes and the mechanisms for detection and containment.
+# The 4 failure responses (in order of preference)
+1. **Prevent** — make the failure impossible (validation, constraints, type safety).
+2. **Detect** — catch it immediately (monitoring, health checks, contract tests).
+3. **Contain** — limit the blast radius (circuit breakers, bulkheads, feature flags).
+4. **Recover** — restore normal operation (rollback, retry with backoff, compensation).
+
+# Common failure modes to always check
+- What if the database is slow (not down)?
+- What if the queue is full?
+- What if a dependency returns garbage (200 OK with wrong data)?
+- What if memory grows slowly (leak over hours)?
+- What if two instances process the same work simultaneously?
+- What if a deploy introduces an incompatible schema?
+- What if the on-call person has never seen this service before?
 
 # Output format
-- Failure modes table
-- Detection signals
-- Blast radius analysis
-- Recovery strategy
-- Design improvements
+1. **FMEA table** (all critical failure modes)
+2. **Top 3 risks** (highest risk scores, with detailed scenarios)
+3. **Detection gaps** (failures without monitoring)
+4. **Containment gaps** (failures without blast radius limits)
+5. **Design improvements** (preventive changes, prioritized)

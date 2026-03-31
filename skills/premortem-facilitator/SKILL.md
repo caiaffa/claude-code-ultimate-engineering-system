@@ -7,47 +7,53 @@ description: Facilitate pre-release failure analysis by assuming the initiative 
 Find the most likely reasons an initiative will fail before production experiences them.
 
 # When to use
-Use this skill when:
-- planning a risky feature
-- preparing a migration or rollout
-- evaluating distributed or operationally sensitive changes
-- trying to improve design quality before implementation or release
+- Planning a risky feature.
+- Preparing a migration or rollout.
+- Evaluating distributed or operationally sensitive changes.
+- Any launch where "we'll see how it goes" is the implicit plan.
 
-# Core principles
-- Assume failure first.
-- Hidden assumptions are often the root of preventable incidents.
-- Rollout and rollback weaknesses matter as much as code quality.
-- A good premortem changes the plan before launch.
+# Handoff
+- **Receives from:** release-commander (pre-launch) or principal-engineer (design phase).
+- **Hands off to:** release-commander (rollout plan adjustments), backend-platform-engineer (design changes), otel-observability-architect (monitoring gaps).
 
-# Assumptions audit
-Before answering, identify:
-- weakest assumption
-- riskiest dependency
-- most fragile rollout step
-- hardest recovery step
-- least visible failure mode
+# The premortem method
+```
+Step 1: "It's 30 days after launch. This change caused a serious production problem."
+Step 2: Work backwards. What happened? Why?
+Step 3: For each scenario, identify the safeguard that should exist but doesn't.
+Step 4: Decide which safeguards to add BEFORE launch.
+```
 
-# Non-obvious failure checklist
-- degraded dependency, not total outage
-- duplicate or stale work corrupts correctness
-- rollout succeeds technically but harms business metric
-- support burden spikes unexpectedly
-- rollback restores code but not state
+# Failure scenario generation
+Generate scenarios across these categories:
 
-# Deep evaluation checklist
-1. Assume failure happened. What failed?
-2. What hidden assumption was wrong?
-3. What signal should have caught it?
-4. What safeguard was missing?
-5. What made recovery slow or unclear?
-6. What changes should be made before launch?
+| Category | Example scenario |
+|---|---|
+| **Dependency** | External API becomes 10x slower (not down) |
+| **Data** | Migration corrupts 0.1% of records silently |
+| **Scale** | Feature gets 50x expected usage on day 1 |
+| **Compatibility** | Old mobile app sends requests new API doesn't handle |
+| **Rollback** | Need to revert but database schema already migrated |
+| **Operational** | Alert fatigue causes team to ignore first warning signs |
+| **Business** | Feature works technically but metric doesn't improve |
 
-# Anti-handwaving rule
-Do not produce generic risks. Tie every scenario to a concrete mechanism or condition.
+# For each scenario, answer
+1. **What failed?** (specific, not generic)
+2. **What signal should have caught it?** (metric, alert, test)
+3. **Why wasn't it caught before release?** (missing test? missing review?)
+4. **What safeguard was missing?** (circuit breaker? validation? canary?)
+5. **What design change would make this much less likely?**
+
+# Red flags — premortem is too shallow if
+- All scenarios are "dependency goes down" variations.
+- No scenarios about data correctness.
+- No scenarios about rollback/revert failures.
+- No scenarios about business metric not moving.
+- Scenarios are generic, not tied to specific design choices.
 
 # Output format
-- likely failure scenarios
-- weak assumptions
-- missing safeguards
-- observability gaps
-- pre-launch changes
+1. **Top 5 failure scenarios** (ranked by likelihood × impact)
+2. **Weak assumptions** (design decisions most likely to be wrong)
+3. **Missing safeguards** (concrete, with implementation suggestion)
+4. **Observability gaps** (what signals need to exist before launch)
+5. **Pre-launch changes** (what must change before shipping)

@@ -7,50 +7,42 @@ description: Audit whether a decision, proposal, PRD, or ADR was made with enoug
 Raise the quality of decisions before execution locks the team into avoidable cost, risk, or rework.
 
 # When to use
-Use this skill when:
-- approving significant decisions
-- reviewing PRDs or ADRs
-- checking prioritization quality
-- validating whether enough rigor exists to proceed
+- Approving significant decisions.
+- Reviewing PRDs or ADRs.
+- Checking prioritization quality.
+- Final gate before committing resources.
 
-# Core principles
-- A weak decision can still produce strong-looking documents.
-- Evidence, alternatives, and reversibility matter.
-- Measurable success criteria are mandatory.
-- If the hypothesis is wrong, the team must know how and when.
+# Handoff
+- **Receives from:** prd-challenger or adr-reviewer (after initial review).
+- **Hands off to:** principal-engineer (with verdict: proceed / revise / reject).
 
-# Assumptions audit
-Before answering, identify:
-- assumed problem relevance
-- assumed evidence quality
-- assumed option quality
-- assumed reversibility
-- assumed success criteria quality
-- assumed decision urgency
+# Before answering
+Identify: assumed problem relevance, evidence quality, option quality, reversibility, success criteria quality, decision urgency.
 
-# Non-obvious failure checklist
-- document complete, reasoning weak
-- decision rushed without cost-of-delay analysis
-- alternatives included but not seriously considered
-- success criteria exist but will not inform action
-- reversibility ignored because the team is optimistic
+# The decision quality test
+A decision is only as strong as its weakest link:
 
-# Deep evaluation checklist
-1. Is the problem worth solving?
-2. Is evidence good enough?
-3. Were alternatives real?
-4. Are trade-offs explicit?
-5. Is reversibility addressed?
-6. Are success criteria measurable?
-7. If wrong, will the team know?
+| Dimension | Strong | Weak | Missing |
+|---|---|---|---|
+| Problem | Evidenced, measured, urgent | Plausible but unmeasured | Assumed |
+| Alternatives | 2+ real options compared | One real + strawmen | Only one option |
+| Trade-offs | Named, sized, accepted | Acknowledged vaguely | "No significant trade-offs" |
+| Reversibility | Rollback plan exists | "We can revert if needed" | Not mentioned |
+| Success criteria | Metric + target + timeline | "We'll monitor" | Not mentioned |
+| Falsifiability | Kill criteria defined | "We'll evaluate" | Not mentioned |
 
-# Anti-handwaving rule
-Do not call a decision “sound” without examining evidence, options, trade-offs, and falsifiability.
+# Red flags — send back for revision
+- Document looks complete but reasoning is thin.
+- Decision was rushed without cost-of-delay analysis.
+- Alternatives included but clearly not seriously considered.
+- Success criteria exist but won't inform any action.
+- No one can explain what happens if the hypothesis is wrong.
 
 # Output format
-- decision quality assessment
-- evidence gaps
-- option quality gaps
-- reversibility concerns
-- measurement concerns
-- proceed / revise recommendation
+1. **Decision quality score:** strong / adequate / weak / reject
+2. **Evidence gaps** (what data is missing)
+3. **Option quality** (were alternatives real?)
+4. **Trade-off clarity** (explicit / vague / missing)
+5. **Reversibility** (planned / vague / absent)
+6. **Measurement plan** (will we know if this worked?)
+7. **Verdict:** proceed / revise / reject

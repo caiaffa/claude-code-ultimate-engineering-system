@@ -7,53 +7,59 @@ description: Plan safe releases, migrations, rollout strategies, rollback proced
 Reduce deployment risk by making release assumptions, sequencing, safeguards, and recovery paths explicit.
 
 # When to use
-Use this skill when:
-- shipping critical features
-- deploying migrations
-- changing infra or traffic flows
-- introducing backward compatibility risk
-- coordinating multi-step rollouts
+- Shipping critical features.
+- Deploying migrations.
+- Changing infra or traffic flows.
+- Introducing backward compatibility risk.
+- Coordinating multi-step rollouts.
 
-# Core principles
-- Make prerequisites explicit.
-- Prefer staged rollout over big-bang release.
-- Define observability before release.
-- Make rollback practical, not theoretical.
-- Tie release steps to decision points.
+# Handoff
+- **Receives from:** backend-platform-engineer (feature ready) or premortem-facilitator (risks identified).
+- **Hands off to:** staff-sre (production validation), operational-excellence-enforcer (runbook check).
 
-# Assumptions audit
-Before answering, identify:
-- assumed compatibility requirements
-- assumed rollback feasibility
-- assumed feature-flag support
-- assumed dependency ordering
-- assumed observability available during rollout
-- assumed owner responsibilities
+# Release plan structure
+```
+1. WHAT is changing (summary, not full diff)
+2. PRECONDITIONS (what must be true before we start)
+3. STEPS (ordered, with decision gates between phases)
+4. MONITORING (what to watch, what thresholds mean stop)
+5. SUCCESS SIGNALS (how we know it worked)
+6. ROLLBACK (triggers, procedure, data implications)
+7. IRREVERSIBLE STEPS (clearly marked ⚠️)
+8. OWNERS (who owns each step, who makes go/no-go calls)
+```
 
-# Non-obvious failure checklist
-- Release plan works only if no lagging consumers exist
-- Rollback restores code but not data state
-- Metrics available but not actionable
-- Hidden config dependency omitted
-- Migration safe in staging, unsafe under production load
-- Canary impossible to interpret due to noisy baseline
+# Rollout strategy selection
+| Risk level | Strategy |
+|---|---|
+| Low risk (config change, minor fix) | Deploy + monitor for 30 min |
+| Medium risk (new feature, API change) | Feature flag → 1% → 10% → 50% → 100% |
+| High risk (migration, data change) | Canary → soak 24h → expand → monitor 48h |
+| Critical (schema migration, breaking change) | Expand-and-contract: dual-write → migrate reads → verify → drop old |
 
-# Deep evaluation checklist
-1. Define what is changing.
-2. List preconditions and checks.
-3. Sequence rollout and migration steps.
-4. Define monitoring and success/failure criteria.
-5. Define rollback triggers and procedure.
-6. Assign owner responsibilities.
-7. Highlight irreversible steps.
+# Rollback reality check
+For each release, answer honestly:
+1. Can we roll back the code? (usually yes)
+2. Can we roll back the data? (often no)
+3. Can we roll back the schema? (depends on migration)
+4. What happens to in-flight requests during rollback?
+5. What happens to data written by the new version?
+6. How long does rollback take? (minutes? hours?)
 
-# Anti-handwaving rule
-Do not say “safe rollout” without naming the gates, signals, and rollback criteria.
+# Red flags
+- Release plan is "deploy and monitor."
+- No one can describe the rollback procedure.
+- Canary has no success criteria.
+- Migration plan works on staging but wasn't tested under production load.
+- Feature flag exists but there's no plan for when to remove it.
+- Multiple irreversible steps without explicit acknowledgment.
 
 # Output format
-- Change summary
-- Preconditions
-- Release steps
-- Monitoring plan
-- Rollback plan
-- Owner checklist
+1. **Change summary**
+2. **Preconditions checklist** (all must be true)
+3. **Release steps** (numbered, with gates)
+4. **Monitoring plan** (metrics, thresholds, dashboards)
+5. **Success criteria** (when is it "done"?)
+6. **Rollback plan** (triggers, procedure, data impact)
+7. **⚠️ Irreversible steps** (clearly marked)
+8. **Owner checklist** (who does what)

@@ -7,52 +7,47 @@ description: Define pragmatic, high-confidence test coverage for features, bug f
 Test the right behavior at the right layer with the least fragility and the highest confidence.
 
 # When to use
-Use this skill when:
-- implementing new features
-- fixing bugs
-- refactoring risky paths
-- defining coverage for APIs, workers, queues, or data flows
-- reducing flaky or low-value tests
+- Implementing new features.
+- Fixing bugs (regression tests).
+- Refactoring risky paths.
+- Defining coverage for APIs, workers, queues.
+- Reducing flaky or low-value tests.
 
-# Core principles
-- Test behavior, not implementation trivia.
-- Choose the lowest layer that provides adequate confidence.
-- Use integration tests where contracts or boundaries matter.
-- Write regression tests for bugs.
-- Avoid mocks that erase the behavior being tested.
+# Handoff
+- **Receives from:** backend-platform-engineer (after implementation) or code-reviewer (identified gaps).
+- **Hands off to:** code-reviewer (for final review), release-commander (for deploy).
 
-# Assumptions audit
-Before answering, identify:
-- assumed business-critical behaviors
-- assumed failure modes worth protecting
-- assumed external dependencies
-- assumed current test maturity
-- assumed execution speed constraints
-- assumed flakiness tolerance
+# Test layer selection
+| What you're testing | Right layer | Wrong layer |
+|---|---|---|
+| Pure business logic (calculations, rules, transforms) | Unit test | Integration test (too slow, too coupled) |
+| API contract (request → response shape, status codes) | Integration test | Unit test (misses middleware, validation) |
+| Database behavior (queries, transactions, constraints) | Integration test with real DB | Unit test with mocked DB (useless) |
+| Queue consumer (job lifecycle, retries, idempotency) | Integration test with real Redis | Unit test (misses BullMQ behavior) |
+| Cross-service contract | Contract test | E2E test (too fragile, too slow) |
+| Critical user journey | E2E (sparingly) | Everything else (too many E2E = slow CI) |
 
-# Non-obvious failure checklist
-- Tests assert framework details instead of business behavior
-- Happy path covered, invariants ignored
-- Async flows lack idempotency or retry coverage
-- Queue consumers tested without realistic job lifecycle
-- Database behavior mocked away when it is part of correctness
-- Refactor safety assumed without characterization tests
+# Must-test scenarios for every feature
+1. **Happy path** — normal flow works.
+2. **Validation failures** — invalid input rejected correctly.
+3. **Error cases** — what happens when dependencies fail?
+4. **Idempotency** — same request twice = same result.
+5. **Edge cases** — empty, null, max length, boundary values.
+6. **Concurrency** — two simultaneous requests for the same resource.
 
-# Deep evaluation checklist
-1. Define the behavior under test.
-2. Break coverage into happy path, edge cases, failures, regressions, boundaries.
-3. Select test layer: unit, integration, end-to-end, contract, smoke.
-4. Identify essential fixtures and setup.
-5. Identify mocks that reduce trust.
-6. Highlight risks that remain untested.
-7. Suggest implementation order for tests.
+# Must-test scenarios for bug fixes
+1. **Regression test** — exact scenario that caused the bug.
+2. **Neighboring scenarios** — similar inputs that might also fail.
 
-# Anti-handwaving rule
-Do not recommend “more tests” without stating what should be tested, at what layer, and why.
+# Red flags — test suite is weak if
+- Tests assert framework details (mock called N times) instead of behavior.
+- Tests break when you refactor internals without changing behavior.
+- Database behavior is mocked away for data-critical paths.
+- No test exercises the retry/failure path.
+- 100% coverage but no edge case or failure scenario tests.
 
 # Output format
-- Behaviors to protect
-- Recommended test layers
-- Concrete test cases
-- Risks not covered
-- Suggested implementation order
+1. **Behaviors to protect** (specific, concrete)
+2. **Test cases** (scenario, expected result, test layer)
+3. **Missing coverage** (risks not tested)
+4. **Implementation order** (most critical first)

@@ -7,54 +7,44 @@ description: Review Redis and BullMQ job systems for throughput, retries, idempo
 Make asynchronous job systems predictable, debuggable, and safe under retries, backlogs, partial failures, and restarts.
 
 # When to use
-Use this skill when:
-- designing workers or queues
-- reviewing BullMQ processing logic
-- investigating job duplication, lag, or stuck jobs
-- tuning throughput and concurrency
-- defining retry and dead-letter behavior
+- Designing workers or queues.
+- Reviewing BullMQ processing logic.
+- Investigating job duplication, lag, or stuck jobs.
+- Tuning throughput and concurrency.
 
-# Core principles
-- BullMQ is not exactly-once; design for at-least-once realities.
-- Idempotency belongs at business boundaries, not just queue mechanics.
-- Retries need backoff, limits, and failure classification.
-- Queue isolation reduces blast radius.
-- Backlog health is a first-class production signal.
+# Handoff
+- **Receives from:** backend-platform-engineer (implementation).
+- **Hands off to:** otel-observability-architect (queue telemetry), premortem-facilitator (pre-launch), release-commander (deploy).
 
-# Assumptions audit
-Before answering, identify:
-- assumed job semantics
-- assumed idempotency guarantees
-- assumed acceptable duplication risk
-- assumed throughput targets
-- assumed retry and timeout policy
-- assumed Redis availability posture
+# BullMQ reality check
+- BullMQ is **at-least-once**, never exactly-once. Design for it.
+- Jobs can be delivered **more than once** after crashes, timeouts, or Redis failovers.
+- Job completion ≠ side-effect completion (DB write may succeed but ack may fail).
+- Repeated jobs (cron/schedulers) can **overlap** if previous run is still active.
 
-# Non-obvious failure checklist
-- Worker logic assumes exactly-once processing
-- Retry duplicates effects in DB or external systems
-- Stuck jobs accumulate without alerting
-- Scheduling drift or repeat jobs create overlapping work
-- One noisy queue starves another
-- Redis performance degradation looks like application bugs
+# Design checklist
+1. **Idempotency** — where is the dedup boundary? (database unique constraint? Redis SET NX? application check?)
+2. **Retry policy** — which errors are retryable? what's the backoff? what's the max attempts? what happens at max?
+3. **Dead letter** — where do permanently failed jobs go? who monitors? who resolves?
+4. **Concurrency** — what's the per-worker concurrency? what happens at 2x/10x job volume?
+5. **Queue isolation** — are noisy/slow job types separated from critical ones?
+6. **Graceful shutdown** — does the worker finish in-progress jobs before exit? timeout?
+7. **Stuck jobs** — how are stalled jobs detected and recovered? `stalledInterval` configured?
+8. **Backlog** — what metrics show queue depth, age, and processing latency?
 
-# Deep evaluation checklist
-1. Job lifecycle correctness
-2. Idempotency boundaries
-3. Retry and backoff design
-4. Poison message handling
-5. Deduplication strategy
-6. Queue isolation and partitioning
-7. Concurrency tuning
-8. Redis failure modes
-9. Monitoring and alerts
-
-# Anti-handwaving rule
-Do not say a queue is “reliable” without explaining idempotency, retry behavior, failure recovery, and backlog detection.
+# Common failure patterns
+| Pattern | What goes wrong | Fix |
+|---|---|---|
+| No idempotency key | Retry creates duplicate business effects | Dedup at DB or application level |
+| Unbounded retries | Poison job retried forever, blocks queue | Max attempts + dead letter |
+| Shared queue for all job types | Slow bulk job starves time-sensitive jobs | Separate queues per priority/type |
+| No stalled job detection | Worker crash leaves job in "active" forever | Configure `stalledInterval` + `maxStalledCount` |
+| Cron overlap | Previous run still active when next starts | Mutex lock or `jobId`-based dedup |
+| No backlog alerting | Queue grows for hours before anyone notices | Alert on queue depth + oldest job age |
 
 # Output format
-- Queue architecture summary
-- Failure mode analysis
-- Throughput bottlenecks
-- Reliability improvements
-- Monitoring recommendations
+1. **Queue architecture summary**
+2. **Failure mode analysis** (per job type)
+3. **Idempotency assessment** (where is it? where is it missing?)
+4. **Throughput/concurrency bottlenecks**
+5. **Monitoring recommendations** (specific metrics + alert thresholds)

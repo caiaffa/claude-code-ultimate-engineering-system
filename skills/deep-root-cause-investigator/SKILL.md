@@ -7,51 +7,46 @@ description: Investigate beyond surface symptoms to identify systemic root cause
 Eliminate classes of failure, not just the latest instance.
 
 # When to use
-Use this skill when:
-- incidents recur
-- a fix addressed symptoms but not causes
-- a failure passed existing safeguards
-- the team needs deeper learning from an outage or bug
+- Incidents recur.
+- A fix addressed symptoms but not causes.
+- A failure passed existing safeguards.
+- The team needs deeper learning from an outage or bug.
 
-# Core principles
-- Symptoms are not root causes.
-- Root cause often has layers: trigger, local cause, enabling condition, missing safeguard.
-- Failed detection and failed containment are part of the cause chain.
-- Permanent correction should reduce recurrence probability materially.
+# Handoff
+- **Receives from:** staff-sre or incident-response (after incident contained).
+- **Hands off to:** postmortem-reviewer (for postmortem), incident-learning-loop (for systemic changes).
 
-# Assumptions audit
-Before answering, identify:
-- assumed trigger event
-- assumed local cause
-- assumed system-level contributors
-- assumed monitoring or alerting quality
-- assumed organizational or process contributors
-- assumed recurrence risk
+# The cause chain method
+Every incident has layers. Peel all of them:
 
-# Non-obvious failure checklist
-- Restart fixed symptom, not cause
-- Root cause framed too narrowly around the last code change
-- Monitoring failed to detect, but only root cause discussed
-- Guardrails absent because ownership unclear
-- Human error blamed where system design invited the error
-- Corrective action fixes only one path, not the class of failure
+```
+1. SYMPTOM       → What did users/systems experience?
+2. TRIGGER       → What specific event started the failure?
+3. LOCAL CAUSE   → Why did the trigger cause harm? (the bug, the misconfiguration)
+4. ENABLING CONDITION → Why was the local cause possible? (missing validation, weak contract)
+5. FAILED DETECTION → Why didn't we catch it before impact? (missing alert, weak test)
+6. FAILED CONTAINMENT → Why didn't we limit the blast radius? (no circuit breaker, no rollback)
+7. SYSTEMIC ROOT  → What class of problem does this represent? (no contract enforcement, no migration safety)
+```
 
-# Deep evaluation checklist
-1. Symptom
-2. Immediate trigger
-3. Local root cause
-4. Systemic enabling condition
-5. Missing detection
-6. Missing containment
-7. Prevention opportunity
-8. Permanent corrective actions
+# Red flags — investigation is too shallow if
+- Root cause is "human error" (what made the error possible/damaging?).
+- Root cause is "bug in line 42" (why was it possible? why not caught?).
+- Root cause is "misconfiguration" (why was the misconfig possible? why no validation?).
+- Only the trigger is identified, not the enabling conditions.
+- Corrective actions only fix this specific instance, not the class.
 
-# Anti-handwaving rule
-Do not stop at “misconfiguration” or “bug” without explaining why it was possible, why it was not detected, and why it could recur.
+# Anti-patterns in root cause analysis
+| Shallow answer | Better question |
+|---|---|
+| "Developer made a mistake" | Why did the system allow this mistake to reach production? |
+| "Missing test" | Why doesn't our test strategy catch this class of bug? |
+| "Config was wrong" | Why is config not validated? Why no canary? |
+| "Dependency was slow" | Why no timeout? Why no circuit breaker? Why no alert on latency? |
 
 # Output format
-- Symptom
-- Root cause chain
-- Systemic contributors
-- Why safeguards failed
-- Permanent corrective actions
+1. **Symptom** (user/system experience)
+2. **Root cause chain** (all 7 layers)
+3. **Systemic contributors** (patterns, not just this instance)
+4. **Why safeguards failed** (detection, containment, prevention)
+5. **Permanent corrective actions** (class-level, not instance-level, with owner + deadline)

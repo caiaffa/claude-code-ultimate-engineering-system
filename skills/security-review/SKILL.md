@@ -4,60 +4,42 @@ description: Review code, APIs, infrastructure, IAM, secrets, and data handling 
 ---
 
 # Mission
-Catch exploitable weaknesses early and improve security posture without vague or ceremonial advice.
+Catch exploitable weaknesses early and improve security posture with practical, auditable controls.
 
 # When to use
-Use this skill when:
-- adding endpoints or auth flows
-- handling files, URLs, secrets, or external integrations
-- reviewing IAM or service permissions
-- validating logging and data exposure
-- checking infrastructure defaults
+- Adding endpoints or auth flows.
+- Handling files, URLs, secrets, or external integrations.
+- Reviewing IAM or service permissions.
+- Validating logging and data exposure.
 
-# Core principles
-- Security is part of design, not an afterthought.
-- Evaluate actual attack surfaces.
-- Prefer least privilege and explicit trust boundaries.
-- Treat sensitive data handling as a first-class concern.
-- Separate critical issues from hardening opportunities.
+# Handoff
+- **Receives from:** code-reviewer (flagged concern) or backend-platform-engineer (new feature with auth/data).
+- **Hands off to:** release-commander (if security changes need careful rollout).
 
-# Assumptions audit
-Before answering, identify:
-- assumed trust boundaries
-- assumed data sensitivity
-- assumed identity and auth model
-- assumed exposure surface
-- assumed logging and audit requirements
-- assumed operational maturity
+# OWASP-aligned checklist
+1. **Authentication** — is identity verified correctly? token validation? session management?
+2. **Authorization** — is access checked at every layer? (not just UI/controller)
+3. **Injection** — SQL, NoSQL, command, LDAP, XSS, template injection?
+4. **Data exposure** — PII in logs? secrets in config? sensitive fields in API responses?
+5. **Secret handling** — hardcoded? rotatable? scoped? auditable?
+6. **File/URL handling** — path traversal? SSRF? unrestricted upload?
+7. **Rate limiting** — brute force protection? abuse protection?
+8. **Dependencies** — known vulnerabilities? supply chain risk?
+9. **Permissions** — least privilege? overly broad IAM?
+10. **Audit trail** — who did what, when? tamper-resistant?
 
-# Non-obvious failure checklist
-- Auth present, authorization weak
-- Safe input at controller, unsafe downstream usage
-- Logs or traces leak sensitive values
-- Signed URLs or tokens too permissive
-- Internal service trust assumed incorrectly
-- Dependency or package choice expands blast radius
-
-# Deep evaluation checklist
-Check for:
-1. Authentication flaws
-2. Authorization flaws
-3. Input validation issues
-4. Injection risks
-5. Sensitive data exposure
-6. Secret handling
-7. Excessive permissions
-8. Unsafe file or URL handling
-9. Insecure defaults
-10. Dependency and supply chain concerns
-11. Auditability gaps
-
-# Anti-handwaving rule
-Do not say “secure” or “reasonably safe” without defining the evaluated threats and control mechanisms.
+# Red flags — block deploy
+- Secrets in code, config files, or logs.
+- SQL string concatenation (even with "trusted" input).
+- Missing auth check on any mutation endpoint.
+- File upload without type/size validation.
+- Internal service endpoint exposed without network restriction.
+- `*` in IAM policies.
 
 # Output format
-- Security summary
-- Critical risks
-- Moderate risks
-- Hardening recommendations
-- Operational follow-ups
+1. **Security summary** (risk level: critical / high / moderate / low)
+2. **Critical risks** (must fix before deploy)
+3. **High risks** (fix in current sprint)
+4. **Moderate risks** (fix soon, track in backlog)
+5. **Hardening recommendations** (nice to have)
+6. **Trust boundary diagram** (who trusts whom)

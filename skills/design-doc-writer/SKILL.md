@@ -7,51 +7,46 @@ description: Convert technical ideas into structured, decision-ready design docu
 Turn ambiguous technical intent into a clear document that supports decision-making, delivery, and risk awareness.
 
 # When to use
-Use this skill when:
-- proposing a new system or feature
-- documenting a migration or redesign
-- aligning stakeholders on a technical plan
-- creating an implementation-ready design
+- Proposing a new system or feature.
+- Documenting a migration or redesign.
+- Aligning stakeholders on a technical plan.
+- Creating an implementation-ready design.
 
-# Core principles
-- Start from the problem.
-- Distinguish goals from non-goals.
-- Make trade-offs explicit.
-- Document risks and rollout strategy.
-- Write for both builders and reviewers.
+# Handoff
+- **Receives from:** principal-engineer (design decision) or backend-platform-engineer (implementation planning).
+- **Hands off to:** adr-reviewer (for formal review), architecture-challenger (for stress test), backend-platform-engineer (for implementation).
 
-# Assumptions audit
-Before answering, identify:
-- assumed audience
-- assumed business urgency
-- assumed scope boundaries
-- assumed operational constraints
-- assumed rollout risk
-- assumed open questions still unresolved
+# Before answering
+Identify: audience (builders? reviewers? leadership?), business urgency, scope boundaries, operational constraints, rollout risk, unresolved open questions.
 
-# Non-obvious failure checklist
-- Good solution, weak problem framing
-- Goals present, success metrics absent
-- Design assumes infra or maturity that does not exist
-- Alternatives included superficially
-- Rollout omitted or deferred
-- Open questions hidden inside the recommendation
+# Document structure
+```
+1. Context        → What situation makes this necessary?
+2. Problem        → What specifically are we solving? (not the solution!)
+3. Goals          → What does success look like?
+4. Non-goals      → What are we explicitly NOT doing?
+5. Requirements   → Hard constraints (compliance, compatibility, performance)
+6. Proposed solution → The design with enough detail to implement
+7. Alternatives    → What else was considered and why rejected?
+8. Risks          → What can go wrong? (technical, operational, delivery)
+9. Rollout plan   → How will this be safely introduced?
+10. Success metrics → How will we know this worked?
+11. Open questions → What remains unresolved?
+```
 
-# Deep evaluation checklist
-1. Context
-2. Problem
-3. Goals
-4. Non-goals
-5. Requirements
-6. Proposed solution
-7. Alternatives considered
-8. Risks and mitigations
-9. Rollout plan
-10. Success metrics
-11. Open questions
+# Quality checks
+- Can a new engineer implement this without asking the author questions?
+- Can a reviewer identify the key trade-offs in 5 minutes?
+- Does the rollout plan have concrete steps, not just "we'll deploy"?
+- Are the success metrics measurable with current tooling?
+- Is every "TODO" or "TBD" acknowledged as an open question?
 
-# Anti-handwaving rule
-Do not claim “this solves the problem” without specifying success conditions and non-goals.
+# Red flags
+- Solution described before problem is clearly stated.
+- Goals section lists activities ("build X") instead of outcomes ("reduce Y").
+- Alternatives section has only one real option.
+- Risks section says "low risk" without analysis.
+- No rollout section, or rollout is one sentence.
 
 # Output format
-Markdown with concise, technically precise sections.
+Markdown document following the structure above, with concise and technically precise sections. Each section should be short enough to review in one sitting.

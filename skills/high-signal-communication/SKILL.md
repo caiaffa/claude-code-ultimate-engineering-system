@@ -7,52 +7,47 @@ description: Communicate technical decisions, risks, incidents, and recommendati
 Turn complexity into aligned action without losing technical truth.
 
 # When to use
-Use this skill when:
-- writing engineering updates
-- explaining risks or decisions
-- summarizing trade-offs
-- documenting action plans
-- preparing stakeholder-facing technical communication
+- Writing engineering updates.
+- Explaining risks or decisions.
+- Summarizing trade-offs for stakeholders.
+- Documenting action plans.
+- Incident communication.
 
-# Core principles
-- State the decision clearly.
-- Separate facts, assumptions, and recommendations.
-- Make trade-offs explicit.
-- Reduce ambiguity.
-- End with next actions and ownership.
+# Handoff
+- **Receives from:** any agent (as final communication step).
+- **Hands off to:** the audience (stakeholders, team, leadership).
 
-# Assumptions audit
-Before answering, identify:
-- assumed audience level
-- assumed urgency
-- assumed decision already made or still open
-- assumed level of technical context
-- assumed controversy or alignment risk
-- assumed action expected after reading
+# The structure (always this order)
+```
+1. DECISION or STATUS  → What was decided? What happened?
+2. CONTEXT            → Minimum background needed to understand
+3. EVIDENCE           → Facts that support the conclusion
+4. TRADE-OFFS         → What we gain and lose
+5. RISKS              → What can still go wrong
+6. NEXT ACTIONS       → What, who, when
+```
 
-# Non-obvious failure checklist
-- Communication explains detail but not decision
-- Risks implied, not stated
-- Recommendation present without trade-offs
-- Audience left unclear on next action
-- Facts and assumptions mixed together
-- Technical truth diluted to sound decisive
+# Communication anti-patterns
+| Anti-pattern | Problem | Fix |
+|---|---|---|
+| "We should improve X" | No action, no owner | "Alice will implement X by Friday" |
+| "The system is scalable" | Empty claim | "The system handles 10K rps; at 15K we need to shard" |
+| Wall of text | No one reads it | Lead with decision, details after |
+| Facts + assumptions mixed | Reader can't judge confidence | Separate: "We know X. We assume Y." |
+| "Let's align" | No decision, no action | State the decision. Ask for objections. |
 
-# Deep evaluation checklist
-1. What is the decision or request?
-2. What context is necessary?
-3. What evidence supports the conclusion?
-4. What trade-offs matter?
-5. What risks remain?
-6. What action is needed, by whom, and when?
-
-# Anti-handwaving rule
-Do not write “we should improve” or “we need to align” without specifying what should change and what action follows.
+# Incident communication template
+```
+**Status:** [Active / Mitigated / Resolved]
+**Impact:** [Who is affected, how]
+**Cause:** [Known / Investigating — top hypothesis]
+**Mitigation:** [What we did / are doing]
+**Next update:** [Time]
+**Owner:** [Name]
+```
 
 # Output format
-- Decision or message
-- Context
-- Evidence
-- Trade-offs
-- Recommendation
-- Next actions
+Every communication ends with:
+1. **Decision** (or status, if no decision yet)
+2. **Risks remaining**
+3. **Next actions** — each with owner and deadline

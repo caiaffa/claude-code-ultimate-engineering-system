@@ -1,243 +1,153 @@
-# QUICKSTART
+# Quickstart
 
-Guia rápido para usar o Claude Code Ultimate Engineering System sem precisar lembrar dezenas de skills e agentes.
-
-## Regra simples
-Para qualquer mudança importante, siga este trio:
-
-1. **Desenhar**
-2. **Desafiar**
-3. **Validar produção**
-
-Agentes padrão:
-- **Desenhar** → `principal-engineer` ou `backend-platform-engineer`
-- **Desafiar** → `architecture-challenger`
-- **Validar produção** → `staff-sre` ou `release-commander`
+Quick guide to using the system. Everything is routed through `CLAUDE.md` automatically.
 
 ---
 
-## 1. Superprompt para PRD
+## The one rule
 
-Use este prompt sempre que quiser validar um PRD com foco em problema real, métrica, baseline, ganho esperado e custo.
+Every important change follows: **Validate value → Design → Challenge → Validate production**
 
-```text
-Atue como principal-engineer.
-
-Quero que você faça uma revisão executiva e técnica deste PRD.
-Use as skills mais relevantes entre:
-- prd-challenger
-- business-impact-challenger
-- prd-metrics-reviewer
-- prd-gap-detector
-- decision-quality-auditor
-
-Quero que você avalie obrigatoriamente:
-
-1. Se o problema de negócio está bem definido
-2. Se existe evidência real de que esse problema existe hoje
-3. Qual é a baseline atual das métricas
-4. Qual métrica principal deveria melhorar
-5. Quais métricas secundárias e guardrails faltam
-6. Qual ganho esperado o PRD está prometendo
-7. Se existe mecanismo causal crível entre solução e ganho esperado
-8. Se o escopo está proporcional ao valor esperado
-9. Quais requisitos de engenharia, operação, segurança, dados e suporte estão implícitos mas não explicitados
-10. Se vale aprovar, ajustar ou rejeitar
-
-Formato de resposta:
-- resumo executivo
-- pontos fortes
-- lacunas críticas
-- baseline e métricas
-- hipótese de ganho
-- riscos e custos escondidos
-- recomendação final: aprovar, ajustar ou rejeitar
-```
-
-### Versão curta do superprompt de PRD
-```text
-Atue como principal-engineer.
-Revise este PRD usando prd-challenger, business-impact-challenger e prd-metrics-reviewer.
-Quero saber:
-- se o problema é real
-- qual baseline existe
-- qual ganho esperado existe
-- quais guardrails faltam
-- se o custo compensa
-- se devo aprovar, ajustar ou rejeitar
-```
+`CLAUDE.md` handles the routing. You just describe what you need (or use a /command).
 
 ---
 
-## 2. Validar ideia
+## Slash commands
 
-```text
-Atue como principal-engineer.
-Quero validar essa ideia do ponto de vista de negócio, arquitetura e risco.
-Use as skills que forem mais relevantes entre prd-challenger, business-impact-challenger, architecture-decisions e engineering-economics.
-No final, diga: aprovar, ajustar ou rejeitar.
-```
+In Claude Code, type:
 
----
-
-## 3. Revisar ADR
-
-```text
-Atue como principal-engineer.
-Use adr-reviewer, architecture-decisions e engineering-economics.
-Revise esta ADR com foco em:
-- clareza do problema
-- trade-offs
-- reversibilidade
-- custo operacional
-- risco de longo prazo
-- rollout e rollback
-```
-
-### Challenger da ADR
-```text
-Agora atue como architecture-challenger.
-Use adr-challenger e distributed-systems-skeptic.
-Tente quebrar essa ADR.
-Quero os pontos fracos, suposições escondidas e o que mais tende a dar errado em produção.
-```
+| Command | What it does |
+|---|---|
+| `/implement [context]` | End-to-end feature: design → challenge → code + review + observability (parallel) → release |
+| `/review [code]` | Parallel code review: correctness + security + observability → merge verdict |
+| `/prd [context]` | Parallel PRD review: challenger + metrics + gaps → approve/adjust/reject |
+| `/adr [context]` | ADR: design → parallel challenge → revise → approve |
+| `/incident [context]` | Incident: contain (urgent) → parallel investigation → root cause → postmortem |
+| `/release [context]` | Release: parallel premortem → rollout plan with gates |
 
 ---
 
-## 4. Implementar feature
+## How subagents work
 
-```text
-Atue como backend-platform-engineer.
-Use nestjs-architecture-guardian, test-strategy e api-design.
-Com base neste contexto, proponha a melhor implementação com:
-- arquitetura
-- boundaries
-- contratos
-- testes necessários
-- riscos
+The 7 agents live in `.claude/agents/`. Claude Code recognizes them automatically.
+
+You can invoke explicitly:
+
+```
+Use the architecture-challenger to attack this ADR
 ```
 
-### Challenger da feature
-```text
-Agora atue como architecture-challenger.
-Use failure-mode-and-effects-engineering e invariants-and-contracts-guardian.
-Quero saber como essa feature pode falhar, quais invariantes podem quebrar e o que precisa mudar antes de subir.
+Or let `CLAUDE.md` route automatically:
+
 ```
+I want to implement a payments API with BullMQ
+→ CLAUDE.md classifies as "implementation"
+→ Triggers phased pattern: principal-eng → challenger → backend-eng + security + obs (parallel) → release
+```
+
+### Force parallelism
+
+```
+Run in parallel: security review, observability review, and code review of this change
+```
+
+### Force background
+
+Press `Ctrl+B` during any subagent to send it to background and keep working.
 
 ---
 
-## 5. Worker / BullMQ / Redis
+## Detailed flows
 
-```text
-Atue como backend-platform-engineer.
-Use redis-bullmq-systems, node-runtime-reliability e postgres-performance-and-safety.
-Revise este fluxo com foco em:
-- idempotência
-- retries
-- concorrência
-- consistência no Postgres
-- stuck jobs
-- backlog
-- graceful shutdown
+### 1. Implement a feature
+
+```
+/implement Checkout API with async payment processing via BullMQ
 ```
 
-### Observabilidade do worker
-```text
-Agora atue como observability-engineer.
-Use otel-observability-architect.
-Defina logs, métricas, spans, alertas e sinais de backlog para esse fluxo.
+Phases:
+
+1. `principal-engineer` → design (sequential)
+2. `architecture-challenger` → attack (sequential)
+3. **Parallel:**
+   - `backend-platform-engineer` → implement
+   - `security-engineer` → security review
+   - `observability-engineer` → instrument
+4. `backend-platform-engineer` → tests (sequential)
+5. `release-commander` → rollout plan (sequential)
+
+### 2. Code review
+
 ```
+/review [paste or describe the change]
+```
+
+**Parallel:**
+- `backend-platform-engineer` → correctness, boundaries, errors
+- `security-engineer` → auth, injection, data exposure
+- `observability-engineer` → instrumentation gaps
+
+Synthesize → **merge verdict:** safe / needs changes / blocked
+
+### 3. PRD review
+
+```
+/prd [paste or describe the PRD]
+```
+
+**Parallel:**
+- `principal-engineer` (prd-challenger) → is the problem real? is the gain worth it?
+- `principal-engineer` (prd-metrics-reviewer) → baseline? guardrails?
+- `principal-engineer` (prd-gap-detector) → what's missing?
+
+Synthesize → **verdict:** approve / adjust / reject
+
+### 4. ADR
+
+```
+/adr Decision: event sourcing vs state machine for orders
+```
+
+1. `principal-engineer` → draft ADR (sequential)
+2. **Parallel:** `architecture-challenger` + `distributed-systems-skeptic`
+3. `principal-engineer` → revise with findings → verdict
+
+### 5. Incident
+
+```
+/incident P99 latency jumped from 200ms to 2s on /api/checkout
+```
+
+1. `staff-sre` → **CONTAIN NOW** (urgent, sequential)
+2. **Parallel:** `backend-platform-engineer` (debug) + `observability-engineer` (telemetry)
+3. Synthesize root cause (sequential)
+4. `staff-sre` → postmortem + learning loop
+
+### 6. Release
+
+```
+/release Deploy new payments API + schema migration
+```
+
+1. **Parallel:** `principal-engineer` (premortem) + `staff-sre` (prod readiness)
+2. `release-commander` → final plan with gates + rollback triggers
 
 ---
 
-## 6. Incidente
+## When to use subagents vs act directly
 
-```text
-Atue como staff-sre.
-Use incident-response, systematic-debugging e operational-excellence-enforcer.
-Quero:
-- contenção imediata
-- hipóteses mais prováveis
-- sinais para validar cada hipótese
-- próximos passos seguros
-```
-
-### Causa raiz
-```text
-Agora atue como backend-platform-engineer.
-Use deep-root-cause-investigator.
-Monte a cadeia de causa raiz:
-- sintoma
-- gatilho
-- causa local
-- condição sistêmica
-- por que não detectamos
-- por que não contivemos
-```
-
-### Aprendizado estrutural
-```text
-Use postmortem-reviewer e incident-learning-loop.
-Transforme esse incidente em aprendizado estrutural, padrões e mudanças permanentes.
-```
+| Situation | Action |
+|---|---|
+| Simple question | Answer directly, no subagent |
+| Single file edit | One subagent is enough |
+| New feature | Full phased flow |
+| PR review | Parallel fan-out |
+| Incident | Urgent → parallel → postmortem |
+| "Not sure which to use" | Describe what you need — `CLAUDE.md` routes it |
 
 ---
 
-## 7. Release
+## Golden rule
 
-```text
-Atue como release-commander.
-Use release-planning e operational-excellence-enforcer.
-Monte:
-- pré-condições
-- passos de rollout
-- sinais de sucesso
-- sinais de rollback
-- checklist de owner
-- pontos irreversíveis
-```
-
----
-
-## 8. Fluxo mínimo recomendado
-
-### Para PRD
-1. `principal-engineer`
-2. `prd-challenger`
-3. `business-impact-challenger`
-
-### Para ADR
-1. `principal-engineer`
-2. `adr-reviewer`
-3. `architecture-challenger`
-
-### Para feature
-1. `backend-platform-engineer`
-2. `architecture-challenger`
-3. `staff-sre`
-
-### Para worker/fila
-1. `backend-platform-engineer`
-2. `observability-engineer`
-3. `staff-sre`
-
-### Para incidente
-1. `staff-sre`
-2. `backend-platform-engineer`
-3. `incident-learning-loop`
-
-### Para release
-1. `release-commander`
-2. `staff-sre`
-
----
-
-## 9. Regra final
-Se estiver em dúvida, use sempre esta sequência:
-
-- **validar valor**
-- **desenhar solução**
-- **tentar quebrar**
-- **validar produção**
-
-Isso já resolve a maior parte dos cenários sem precisar decorar tudo.
+When in doubt, describe what you need in natural language.
+`CLAUDE.md` classifies and triggers the right flow with the right subagents.

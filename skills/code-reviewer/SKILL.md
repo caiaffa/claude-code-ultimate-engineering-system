@@ -4,61 +4,50 @@ description: Review code changes for correctness, maintainability, security, per
 ---
 
 # Mission
-Provide review feedback that improves the change, protects the codebase, and raises engineering quality without wasting reviewer attention.
+Provide review feedback that improves the change, protects the codebase, and raises engineering quality.
 
 # When to use
-Use this skill when:
-- reviewing pull requests
-- reviewing local diffs before merge
-- performing design-level code audits
-- checking whether a change is safe to ship
+- Reviewing pull requests or diffs.
+- Performing design-level code audits.
+- Checking whether a change is safe to ship.
 
-# Core principles
-- Prioritize correctness over style.
-- Separate critical issues from suggestions.
-- Be specific, actionable, and evidence-based.
-- Review for both local code quality and systemic risk.
-- Reward good engineering patterns where present.
+# Handoff
+- **Receives from:** backend-platform-engineer (implementation complete).
+- **Hands off to:** test-strategy (if tests need work), security-review (if auth/data involved), release-commander (if approved for deploy).
 
-# Assumptions audit
-Before answering, identify:
-- assumed purpose of the change
-- assumed criticality of the path
-- assumed performance sensitivity
-- assumed compatibility requirements
-- assumed rollout model
-- assumed test expectations
+# Before answering
+Identify: purpose of the change, criticality of the path, performance sensitivity, compatibility requirements, rollout model, test expectations.
 
-# Non-obvious failure checklist
-- Change passes tests but weakens boundaries
-- Hidden breaking changes in contracts or defaults
-- Increased coupling through convenience imports
-- Error handling changed subtly
-- Logging, tracing, or metrics got worse
-- Retry or timeout changes amplify downstream failures
-- Migration or rollout requirements implied but undocumented
+# Review priorities (in order)
+1. **Correctness** — does it do what it claims?
+2. **Safety** — can it break production? data? contracts?
+3. **Security** — auth, injection, data exposure, secrets.
+4. **Error handling** — explicit, appropriate, consistent.
+5. **Observability** — can we diagnose issues with this change?
+6. **Maintainability** — will the next person understand this?
+7. **Performance** — is it acceptable for the expected load?
+8. **Style** — only mention if it significantly hurts readability.
 
-# Deep evaluation checklist
-Review for:
-1. Correctness
-2. Readability
-3. Maintainability
-4. Cohesion and coupling
-5. Boundary discipline
-6. Error handling
-7. Security concerns
-8. Performance concerns
-9. Observability implications
-10. Compatibility and rollout safety
-11. Test coverage and missing cases
+# Red flags — block merge
+- Silent swallowing of errors (empty catch blocks).
+- Breaking change to public API or event contract without versioning.
+- Missing idempotency on retry-able mutation paths.
+- Secrets, tokens, or PII in logs.
+- N+1 queries introduced.
+- Timeout or retry changes without understanding downstream impact.
 
-# Anti-handwaving rule
-Do not say “looks good overall” without explicitly assessing correctness, safety, and merge risk.
+# Feedback format
+Classify every comment:
+- 🔴 **Block:** must fix before merge (correctness, safety, security).
+- 🟡 **Should fix:** high risk of problems if ignored.
+- 🔵 **Suggestion:** improvement, not blocking.
+- 🟢 **Positive:** good pattern worth noting.
 
 # Output format
-- Review summary
-- Critical issues
-- Medium-priority concerns
-- Suggestions
-- Positive observations
-- Merge risk assessment
+1. **Summary** (1-2 sentences: what the change does)
+2. **Merge risk:** safe / risky / blocked
+3. **Critical issues** (🔴)
+4. **Should-fix concerns** (🟡)
+5. **Suggestions** (🔵)
+6. **Positive observations** (🟢)
+7. **Missing tests** (specific scenarios)

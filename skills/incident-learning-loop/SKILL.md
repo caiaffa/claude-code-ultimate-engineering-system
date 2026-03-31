@@ -7,47 +7,37 @@ description: Convert incidents into durable standards, safeguards, templates, an
 Ensure every serious incident improves the engineering system, not just the affected service.
 
 # When to use
-Use this skill when:
-- closing a postmortem
-- deciding what should become a standard
-- updating templates, checklists, or runbooks after incidents
-- propagating lessons beyond the local failure
+- Closing a postmortem.
+- Deciding what should become a standard.
+- Updating templates, checklists, or runbooks after incidents.
+- Propagating lessons beyond the local failure.
 
-# Core principles
-- Incidents should create durable learning.
-- Fix the class of failure, not only the instance.
-- Standards and templates should evolve after real pain.
-- Cross-system learning is more valuable than isolated fixes.
+# Handoff
+- **Receives from:** postmortem-reviewer (after postmortem analysis) or deep-root-cause-investigator.
+- **Hands off to:** principal-engineer (for standard updates), operational-excellence-enforcer (for runbook/alert updates).
 
-# Assumptions audit
-Before answering, identify:
-- assumed class of failure
-- assumed affected services or workflows
-- assumed missing safeguard
-- assumed standards that should change
-- assumed recurrence risk elsewhere
+# The learning extraction process
+For every incident, ask:
 
-# Non-obvious failure checklist
-- lesson stays local to one team
-- fix applied to code, not to standards
-- runbook improved but design rule unchanged
-- incident exposed weak template that remains unchanged
-- same class of failure still possible in similar systems
+1. **What class of failure was this?** (not "what happened" but "what category")
+   - Examples: missing idempotency, schema migration lock, stale cache read, missing circuit breaker
+2. **What invariant was violated?** (check against SYSTEM_INVARIANTS.md)
+3. **What standard should change?** (PROJECT_CONVENTIONS.md, DECISION_RULES.md, etc.)
+4. **What template or checklist should be updated?** (SERVICE_SCORECARD.md, DEFINITION_OF_DONE.md, etc.)
+5. **What other services have this same exposure?** (lateral scan)
+6. **What review requirement should be added?** (new item in code review, ADR review, etc.)
 
-# Deep evaluation checklist
-1. What class of failure occurred?
-2. What invariant or safeguard was missing?
-3. What template, checklist, or standard should change?
-4. What should become a new review requirement?
-5. Which other services are likely exposed?
-6. What durable change reduces recurrence?
-
-# Anti-handwaving rule
-Do not stop at “we learned a lot.” Name the standard, template, or guardrail that should change.
+# Red flags — learning is too shallow if
+- Lesson stays local to one team or service.
+- Fix applied to code but no standard or process changes.
+- Runbook improved but the design that caused the incident is unchanged.
+- Same class of failure is still possible in 3 other services.
+- Action items are all "add monitoring" without prevention.
 
 # Output format
-- class of failure
-- systemic lesson
-- standards to update
-- templates or checklists to add
-- wider rollout recommendations
+1. **Class of failure** (categorized)
+2. **Systemic lesson** (what the org should learn)
+3. **Standards to update** (specific files and changes)
+4. **Templates/checklists to add or modify** (specific)
+5. **Other exposed services** (lateral risk scan)
+6. **Wider rollout plan** (how to propagate the fix beyond this service)

@@ -7,50 +7,48 @@ description: Detect missing sections, ambiguous assumptions, measurement gaps, a
 Find the omissions that turn promising PRDs into expensive surprises.
 
 # When to use
-Use this skill when:
-- checking PRD completeness
-- looking for hidden engineering cost
-- validating measurement and rollout quality
-- surfacing operational, data, support, or security gaps
+- Checking PRD completeness.
+- Looking for hidden engineering cost.
+- Validating measurement and rollout quality.
+- Surfacing operational, data, support, or security gaps.
 
-# Core principles
-- Missing information is risk.
-- Ambiguity delays engineering and weakens alignment.
-- Measurement and guardrails are mandatory.
-- Hidden requirements are often more expensive than visible ones.
+# Handoff
+- **Receives from:** prd-challenger (after initial challenge).
+- **Hands off to:** engineering-economics (cost assessment), principal-engineer (for revision).
 
-# Assumptions audit
-Before answering, identify:
-- assumed completeness of the PRD
-- assumed ownership clarity
-- assumed rollout strategy
-- assumed measurement plan
-- assumed operational burden
-- assumed non-goals
+# Completeness scan
+Check whether the PRD explicitly addresses each item. "Implied" is not "addressed":
 
-# Non-obvious failure checklist
-- no explicit non-goals
-- no owner after launch
-- no metric source
-- no rollout or rollback thinking
-- hidden dependency on migration or data cleanup
-- support and audit needs omitted
+| Section | Present? | Quality |
+|---|---|---|
+| Problem statement with evidence | | |
+| Baseline metric(s) with source | | |
+| Non-goals (explicit scope boundary) | | |
+| Primary success metric | | |
+| Secondary metrics | | |
+| Guardrail metrics (what must NOT get worse) | | |
+| Target with timeline | | |
+| Owner after launch | | |
+| Rollout plan | | |
+| Rollback plan | | |
+| Support impact assessment | | |
+| Security implications | | |
+| Data/migration requirements | | |
+| Observability requirements | | |
+| Decision rule (when to stop or pivot) | | |
 
-# Deep evaluation checklist
-1. Missing problem evidence
-2. Missing baseline
-3. Missing non-goals
-4. Missing owner
-5. Missing measurement or guardrails
-6. Missing rollout plan
-7. Missing support, security, or data requirements
-
-# Anti-handwaving rule
-Do not mark a PRD complete if key engineering or business sections are implied instead of stated.
+# Hidden cost areas that PRDs almost always miss
+1. **Data migration** — does the feature require backfilling old data?
+2. **Observability** — new dashboards, alerts, SLOs needed?
+3. **Support burden** — new failure modes that support team needs to handle?
+4. **Security** — new auth rules, permission changes, data exposure?
+5. **API compatibility** — does this break existing consumers?
+6. **Operational burden** — who monitors this at 3 AM?
+7. **Documentation** — API docs, user guides, internal wiki?
 
 # Output format
-- completeness assessment
-- critical gaps
-- ambiguity risks
-- hidden engineering work
-- required additions
+1. **Completeness score** (X/15 sections addressed)
+2. **Critical gaps** (missing items that block approval)
+3. **Hidden engineering work** (undisclosed cost areas)
+4. **Ambiguity risks** (things that could be interpreted multiple ways)
+5. **Required additions** (specific sections to write, with guidance)
