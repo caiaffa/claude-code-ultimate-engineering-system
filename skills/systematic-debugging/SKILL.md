@@ -1,55 +1,47 @@
 ---
 name: systematic-debugging
-description: Investigate bugs using structured root-cause analysis, evidence-driven hypothesis testing, targeted reproduction, and disciplined validation.
+description: Isolate the root cause of a bug, failure, or flaky test through disciplined hypothesis testing — and trace the full cause chain, not just the surface symptom.
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Mission
-Replace guesswork with evidence. Drive from symptom to root cause through explicit hypotheses, targeted validation, and safe corrective action.
+Find the real root cause fast, with evidence — never patch a symptom.
 
 # When to use
-- Behavior differs from expectations.
-- Production incidents or local bugs.
-- Intermittent or timing-dependent issues.
-- Failures spanning multiple layers or services.
+- A bug, regression, flaky test, or unexpected behavior.
+- An incident investigation needs a confirmed cause.
 
 # Handoff
-- **Receives from:** staff-sre (after incident contained) or backend-platform-engineer (during development).
-- **Hands off to:** code-reviewer (for the fix), test-strategy (for regression test).
+- Receives from: reliability-engineer (during incidents) or backend-platform-engineer.
+- Hands off to: backend-platform-engineer (fix) or incident-response (if production).
 
-# The method
+# Method — hypothesis discipline
+1. **State the symptom precisely.** What is observed vs. expected? When did it start? What changed?
+2. **List the top 3 hypotheses.** Rank by likelihood.
+3. **For each, name the ONE signal that confirms or kills it.** A log line, a value, a test result.
+4. **Test in order — cheapest signal first.** Do not guess-fix.
+5. **Confirm before fixing.** You must be able to explain the full chain: trigger → mechanism → symptom.
+
+# Root-cause depth
+Ask "why" until you reach something you can actually change:
+- Symptom: request times out.
+- Why? Query takes 8s. Why? Missing index. Why? Migration added a filter column without one. Why? No review step catches index gaps.
+The fix at depth 2 stops this bug; the fix at depth 4 stops the class.
+
+# Flaky tests
+- Reproduce with repeated runs before declaring it flaky.
+- Usual causes: shared state, timing/sleep, ordering, external dependency, real clock.
+
+# Red flags — stop
+- About to change code without a confirmed hypothesis.
+- "It works now" with no explanation of why it broke.
+- Fixing the symptom while the trigger remains.
+
+# Output
 ```
-1. STATE the problem precisely (expected vs actual)
-2. GATHER context (recent changes, environment, timing)
-3. HYPOTHESIZE (list 3-5 causes, ranked by probability)
-4. TEST the most likely hypothesis first
-   - What ONE signal confirms or eliminates it?
-   - Check that signal.
-5. NARROW — eliminate hypotheses, don't collect more data randomly
-6. VERIFY — confirm root cause with independent evidence
-7. FIX with minimal blast radius
-8. VALIDATE — regression test + monitor
+# DEBUG REPORT
+Symptom: [precise]
+Confirmed root cause: [with evidence]
+Full chain: trigger -> mechanism -> symptom
+Fix: [symptom-level] / Prevention: [class-level]
 ```
-
-# Red flags — you're debugging wrong if
-- You changed code before having a hypothesis.
-- You're reading logs without knowing what you're looking for.
-- You said "that's weird" more than twice without writing a hypothesis.
-- You restarted the service and called it fixed.
-- You're debugging in production without a rollback plan.
-
-# Common traps
-- Multiple issues producing the same symptom.
-- Partial failure hidden behind retries (looks like intermittent).
-- Environment mismatch (works locally, breaks in prod).
-- Stale caches, queues, or config masking the real state.
-- Race conditions that disappear under debugging/logging.
-- "Fixed by restart" but the allocating pattern still exists.
-
-# Output format
-1. **Problem statement** (precise: expected X, got Y, in context Z)
-2. **Hypotheses** (ranked by probability, each with confirmation signal)
-3. **Investigation steps** (ordered, minimal)
-4. **Root cause** (with evidence chain)
-5. **Fix** (with blast radius assessment)
-6. **Regression test** (specific scenario)
-7. **Monitoring** (what to watch post-fix)

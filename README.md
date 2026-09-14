@@ -1,170 +1,109 @@
-# Claude Code Ultimate Engineering System v3
+# Claude Code Ultimate Engineering System v5
 
-A complete engineering system for [Claude Code](https://claude.ai/code) with an **orchestrator + parallel subagents**.
-A single `CLAUDE.md` automatically routes every request. You just describe what you need.
+An opinionated engineering system for [Claude Code](https://claude.ai/code):
+one orchestrator (`CLAUDE.md`), **6 specialized subagents**, **10 slash-command
+workflows**, **21 skills**, governance docs, and hooks — installed globally so it
+works in every repository you open.
 
 ```
 You describe the task (or use a /command)
         ↓
-CLAUDE.md classifies and selects the pattern
+CLAUDE.md classifies it and picks the execution pattern
         ↓
-Subagents execute (parallel or sequential)
+Subagents run — sequential where there is a decision gate, parallel where work is independent
         ↓
-Results synthesized with decision + risks + next steps
+One synthesis: decision · evidence · trade-offs · risks · next actions
 ```
 
-## Installation
+This is the system I run at work. It is tuned for a NestJS / Postgres / Redis-BullMQ
+backend shop and for Kovi's engineering process (RFC-0001, blameless postmortems,
+PT-BR templates). Fork it and adapt `engineering/` and the `/rfc`, `/prd-sync`
+commands to your own process.
 
-### Prerequisites
-
-- [Claude Code](https://claude.ai/code) installed and available in your `PATH`
-- Bash-compatible shell (macOS/Linux)
-
-### Global install (recommended)
-
-Installs agents, commands, skills, and governance docs under `~/.claude/` so they are available in **every project** you open with Claude Code.
+## Install
 
 ```bash
 git clone https://github.com/caiaffa/claude-code-ultimate-engineering-system.git
 cd claude-code-ultimate-engineering-system
-chmod +x install-global.sh
 ./install-global.sh
 ```
 
-What the installer does:
+The installer backs up whatever is in `~/.claude/` to `~/.claude/backups/<ts>-pre-install/`,
+copies the system in, removes artifacts superseded since v3, **merges** (never overwrites)
+`~/.claude/settings.json`, and validates the result. Restart Claude Code afterwards.
 
 | Destination | Contents |
 |---|---|
-| `~/.claude/CLAUDE.md` | Global orchestrator (auto-loaded by Claude Code) |
-| `~/.claude/agents/` | 7 specialized subagents |
-| `~/.claude/commands/` | 6 slash commands |
-| `~/.claude/skills/` | 38 engineering skills |
+| `~/.claude/CLAUDE.md` | Orchestrator — routing, patterns, hard rules |
+| `~/.claude/agents/` | 6 subagents |
+| `~/.claude/commands/` | 11 slash commands |
+| `~/.claude/skills/` | 21 skills |
+| `~/.claude/engineering/` | 21 governance docs, checklists and templates |
+| `~/.claude/hooks/` | post-edit formatter, Definition-of-Done gate |
 
-> If a `~/.claude/CLAUDE.md` already exists, a timestamped backup is created automatically.
+Permissions are yours to set — `settings.example.json` has the recommended allow/deny list
+(broad execution, five safety denials). `./uninstall-global.sh` removes everything it installed.
 
-### Per-project install
+## Commands
 
-If you prefer to scope the system to a single repository, copy the files directly:
+| Command | Flow |
+|---|---|
+| `/implement <feature>` | context → design → challenge → build → parallel review → fix → release plan |
+| `/review <pr\|branch\|range>` | one diff → 3 parallel reviewers (code, security, reliability) → merged verdict |
+| `/debug <symptom>` | reproduce → 3 hypotheses with one signal each → parallel investigation → fix + regression test → prevent |
+| `/refactor <target>` | characterize → challenge the plan → one mergeable step at a time → review |
+| `/onboard [repo]` | map architecture, conventions, dev workflow, danger zones; saved to agent memory |
+| `/rfc <decision>` | draft (RFC-0001 template) → challenge → revise → persist to the vault |
+| `/adr <decision>` | lightweight record for small, local, reversible decisions |
+| `/prd <prd>` | two-lens PRD review (engineering + product) with readiness score |
+| `/incident <alert>` | contain (urgent, sequential) → parallel investigation → blameless postmortem |
+| `/release <change>` | parallel premortem + readiness → rollout plan with gates and rollback triggers |
 
-```bash
-git clone https://github.com/caiaffa/claude-code-ultimate-engineering-system.git
-cp -r claude-code-ultimate-engineering-system/{CLAUDE.md,AGENTS.md,QUICKSTART.md,.claude,skills} /path/to/your/project/
-```
+`/prd-sync` is a Kovi-specific helper that turns PRD PDFs into versioned markdown and reviews them.
 
-### Uninstall
+## Agents
 
-To remove a global installation:
-
-```bash
-cd claude-code-ultimate-engineering-system
-chmod +x uninstall-global.sh
-./uninstall-global.sh
-```
-
-This removes all installed agents, commands, skills, and engineering docs. If a previous `CLAUDE.md` backup exists, it is restored automatically.
-
----
-
-## Quick start
-
-Open Claude Code in any project and use slash commands:
-
-| Command | What it does | Pattern |
+| Agent | Model | Owns |
 |---|---|---|
-| `/implement [context]` | End-to-end feature: design → challenge → code → test → release | Phased (seq + parallel) |
-| `/review [code]` | Code review: correctness + security + observability | Fan-out parallel |
-| `/prd [context]` | PRD review: problem, value, metrics, gaps | Fan-out parallel |
-| `/adr [context]` | ADR: design → parallel challenge → revise | Pipeline + parallel |
-| `/incident [context]` | Incident: contain → parallel investigation → postmortem | Urgent → parallel |
-| `/release [context]` | Release: parallel premortem → rollout plan | Parallel → sequential |
+| `principal-engineer` | fable · xhigh · read-only | architecture, ADR/RFC, PRD, scope |
+| `architecture-challenger` | opus · xhigh · read-only | adversarial review — **deliberately a different model from the author** |
+| `backend-platform-engineer` | sonnet (escalated to opus for multi-service/migration/async work) | implementation, tests, debugging, refactoring |
+| `reliability-engineer` | sonnet | incidents, SLOs, observability, performance, readiness; uses the Grafana MCP when present |
+| `security-engineer` | sonnet · read-only | auth, secrets, data exposure, tenant isolation |
+| `release-commander` | sonnet | rollout, migration, rollback plans |
 
-Or just describe what you need in natural language:
+Each agent preloads its skills and keeps persistent memory: `user` scope for the
+thinkers/reviewers (patterns that hold across repos), `local` for the builder
+(per-repo conventions). Read-only agents return text; the orchestrator writes files.
 
-> "I want to implement a payments API with BullMQ for async processing"
+Cost dial: `principal-engineer` is the only Fable agent. Set `model: opus` in
+`.claude/agents/principal-engineer.md` if you want to halve the design phase's price.
 
-The orchestrator classifies the request and routes it automatically.
+## Hard rules the orchestrator enforces
 
----
+- Builder and challenger are always different agents; nobody reviews their own design.
+- Every critical change and every refactor plan passes the challenger; loops cap at 2.
+- Reviews run **after** the code exists, on one shared diff.
+- No "looks good", "scalable", "production-ready" without a named mechanism.
+- Done = passes `engineering/DEFINITION_OF_DONE.md`. Tests run before every commit; never commit red.
+- Every finding from every subagent survives into the synthesis.
 
-## Subagents
-
-| Agent | Model | Role |
-|---|---|---|
-| `principal-engineer` | Opus | Architecture, design, ADR, PRD |
-| `backend-platform-engineer` | Sonnet | Implementation, code, tests |
-| `architecture-challenger` | Opus | Adversarial review of designs |
-| `staff-sre` | Sonnet | Production reliability, incidents, SLOs |
-| `observability-engineer` | Sonnet | Telemetry, metrics, alerts |
-| `security-engineer` | Sonnet | Auth, secrets, data exposure |
-| `release-commander` | Sonnet | Rollout, rollback, migrations |
-
----
-
-## Parallelism patterns
-
-**Fan-out** — Multiple agents review in parallel, results synthesized at the end.
+## Layout
 
 ```
-┌─ agent A ──┐
-├─ agent B ──┤ → synthesize
-└─ agent C ──┘
+CLAUDE.md               orchestrator (identical to ~/.claude/CLAUDE.md after install)
+.claude/agents/         6 subagents
+.claude/commands/       11 slash commands
+skills/<name>/SKILL.md  21 skills
+engineering/            governance docs, checklists, templates
+hooks/                  post-edit-format.sh, dod-check.sh
+scripts/validate.sh     frontmatter + cross-reference checks (run before committing)
 ```
 
-**Pipeline** — Sequential design → parallel challenge → loop if rejected.
-
-```
-design → [challenge A | challenge B] → approved? → next phase
-```
-
-**Phased** — Sequential phases with parallelism within each phase.
-
-```
-Phase 1 (seq): design
-Phase 2 (seq): challenge
-Phase 3 (par): implement | review | instrument
-Phase 4 (seq): release plan
-```
-
----
-
-## What's included
-
-### `.claude/agents/` — 7 subagents
-
-Each agent has: name, description, model, allowed tools, system prompt, and output rules.
-
-### `.claude/commands/` — 6 slash commands
-
-Each command defines explicit phases with a parallelism pattern.
-
-### `skills/` — 38 engineering skills
-
-Each skill has: mission, handoff chain, red flags, checklist, anti-handwaving rule, and output format with severity.
-
-### Governance docs — 8 files
-
-Standards enforced by all agents: `SYSTEM_INVARIANTS`, `DECISION_RULES`, `ASYNC_CONTRACTS`, `SERVICE_SCORECARD`, `DEFINITION_OF_DONE`, `PROJECT_CONVENTIONS`, `OBSERVABILITY_STANDARDS`, `RELEASE_RULES`.
-
-### Templates — 7 files
-
-ADR, PRD, premortem, postmortem, business impact, engineering risks, decision quality.
-
----
-
-## Cost optimization
-
-Multi-agent workflows use 4–7x more tokens. To optimize:
-
-- **Opus** only for `principal-engineer` and `architecture-challenger` (deep reasoning)
-- **Sonnet** for everything else (focused execution)
-- Max 3–4 parallel subagents at a time
-- Set a subagent model override when needed:
-
-```bash
-export CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-5-20250929
-```
-
----
+`scripts/validate.sh` is the test suite: it checks every agent/skill/command frontmatter,
+model and effort values, that preloaded skills exist, that commands only reference real
+agents, and that no stale v3 names or paths survive. `scripts/validate.sh ~/.claude`
+validates an installed copy.
 
 ## License
 

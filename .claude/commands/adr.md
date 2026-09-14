@@ -1,25 +1,26 @@
 ---
-description: "Create and challenge an ADR for an architecture decision"
+description: Lightweight decision record for small, local, reversible decisions
 ---
 
-## Phase 1: Draft ADR (principal-engineer)
-Use the principal-engineer agent to:
-- Analyze: $ARGUMENTS
-- Draft ADR using ADR_TEMPLATE.md
-- Include at least 2 real options with honest trade-offs
+For SIGNIFICANT decisions — architecture affecting other teams, new tech,
+anything over ~2 weeks — use **/rfc** (Kovi's RFC-0001 standard). Use /adr only
+for small, local decisions that do not warrant a full RFC.
 
-## Phase 2: Challenge (parallel)
-Run in parallel:
+Decision: $ARGUMENTS
 
-**Subagent A — architecture-challenger:**
-- Attack the ADR: weakest assumptions, failure modes, alternatives dismissed too quickly
+## Phase 1 — Draft (sequential)
+**principal-engineer** drafts a short ADR using
+`~/.claude/engineering/ADR_TEMPLATE.md`: context, the decision, at least 2
+real options with honest trade-offs, consequences, reversibility.
 
-**Subagent B — distributed-systems-skeptic (principal-engineer):**
-- If the design is distributed: challenge ordering, duplication, partial failure, compensation
+## Phase 2 — Challenge (sequential)
+**architecture-challenger** attacks the draft: weakest assumptions, failure
+modes, alternatives dismissed too fast. Checklist:
+`~/.claude/engineering/ADR_REVIEW_CHECKLIST.md`.
 
-## Phase 3: Revise + Approve (sequential)
-Use the principal-engineer agent to:
-- Incorporate challenge findings
-- Produce final ADR
-- Validate against ADR_REVIEW_CHECKLIST.md
-- Declare verdict: approve / revise / reject
+## Phase 3 — Revise & persist (sequential)
+**principal-engineer** revises with the findings and returns the final text.
+The **orchestrator** writes it (principal-engineer has no Write tool) to
+`~/code/kovi/staff/claude/vault/decisions/ADR-<NNNN>-<slug>.md`
+(next number = highest existing + 1). If the decision turns out to be
+significant, escalate it to a full RFC instead.

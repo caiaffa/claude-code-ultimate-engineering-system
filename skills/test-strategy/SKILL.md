@@ -1,6 +1,7 @@
 ---
 name: test-strategy
 description: Define pragmatic, high-confidence test coverage for features, bug fixes, refactors, APIs, workers, queues, and distributed workflows.
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Mission
@@ -14,8 +15,8 @@ Test the right behavior at the right layer with the least fragility and the high
 - Reducing flaky or low-value tests.
 
 # Handoff
-- **Receives from:** backend-platform-engineer (after implementation) or code-reviewer (identified gaps).
-- **Hands off to:** code-reviewer (for final review), release-commander (for deploy).
+- **Receives from:** backend-platform-engineer (after implementation) or code-review (identified gaps).
+- **Hands off to:** code-review (for final review), release-commander (for deploy).
 
 # Test layer selection
 | What you're testing | Right layer | Wrong layer |

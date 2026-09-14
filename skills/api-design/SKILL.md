@@ -14,7 +14,7 @@ Create APIs that are easy to consume, evolve safely, observe in production, and 
 
 # Handoff
 - **Receives from:** principal-engineer (design decision) or backend-platform-engineer (implementation).
-- **Hands off to:** test-strategy (contract tests), security-review (auth), otel-observability-architect (instrumentation).
+- **Hands off to:** test-strategy (contract tests), security-review (auth), observability (instrumentation).
 
 # Before answering
 Identify: consumers and their maturity, backward compatibility needs, idempotency requirements, auth model, latency sensitivity, pagination needs.

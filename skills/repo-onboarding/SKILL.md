@@ -1,6 +1,7 @@
 ---
 name: repo-onboarding
-description: Understand the repository structure, architecture, conventions, dependencies, scripts, and local development workflow before proposing or making changes.
+description: Map an unfamiliar repository before changing it — understand the structure, architecture, conventions, dependencies, scripts, and local development workflow before proposing or making changes.
+allowed-tools: Read, Grep, Glob, Bash(git log:*), Bash(ls:*), Bash(cat:*)
 ---
 
 # Mission
@@ -15,6 +16,7 @@ Build an accurate mental model of the repository before changing it. Reduce blin
 # Handoff
 - **Receives from:** CLAUDE.md orchestrator (onboarding category).
 - **Hands off to:** backend-platform-engineer (ready to implement), nestjs-architecture-guardian (if NestJS).
+- Record conventions, commands, and danger zones to agent memory so later runs start informed.
 
 # Exploration order
 ```

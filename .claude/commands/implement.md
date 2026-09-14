@@ -1,39 +1,46 @@
 ---
-description: "Implement a feature end-to-end: design → implement → challenge → test → observe"
+description: Implement a feature end to end — context, design, challenge, build, review, release
 ---
 
-## Phase 1: Design (sequential)
-Use the principal-engineer agent to:
-- Analyze the requirement: $ARGUMENTS
-- Propose architecture, boundaries, and contracts
-- Reference SYSTEM_INVARIANTS.md and DECISION_RULES.md
+Feature: $ARGUMENTS
 
-## Phase 2: Challenge (sequential, after Phase 1)
-Use the architecture-challenger agent to:
-- Attack the design from Phase 1
-- If critical issues: return to Phase 1 with findings
+Governance lives in `~/.claude/engineering/`. Every phase receives only the
+context it needs (files, diff, prior phase output) — not the whole conversation.
 
-## Phase 3: Implement + Review + Observe (parallel)
-Run these three subagents in parallel:
+## Phase 0 — Context (sequential; skip if the repo is already mapped this session)
+**backend-platform-engineer** (repo-onboarding skill) or an **Explore** agent:
+map the modules, contracts, tests, and conventions the feature touches.
+Output: list of files + boundaries + existing tests. This feeds Phase 1.
 
-**Subagent A — backend-platform-engineer:**
-- Implement the approved design
-- Write code with error handling and idempotency
-- Follow PROJECT_CONVENTIONS.md
+## Phase 1 — Design (sequential)
+**principal-engineer**: propose architecture, boundaries, contracts, and the
+test strategy, grounded in the Phase 0 map. Reference SYSTEM_INVARIANTS.md and
+DECISION_RULES.md. Must end with "what the challenger should attack first".
 
-**Subagent B — security-engineer:**
-- Review the implementation for security concerns
-- Check auth, data exposure, secrets
+## Phase 2 — Challenge (sequential, decision gate)
+**architecture-challenger**: attack the design. REJECTED or critical findings →
+back to Phase 1 with the findings (max 2 loops; then surface the disagreement
+to the user instead of looping).
 
-**Subagent C — observability-engineer:**
-- Design instrumentation for the new feature
-- Define spans, metrics, alerts
+## Phase 3 — Build (sequential)
+**backend-platform-engineer**: implement the approved design with tests; run
+the suite and report output. Escalate the builder to `model: opus` (Agent tool
+`model` param) when the change is multi-service, touches migrations or async
+contracts, or spans more than ~5 files.
 
-## Phase 4: Test (sequential, after Phase 3)
-Use the backend-platform-engineer agent to:
-- Write tests following test-strategy skill
-- Cover: happy path, errors, idempotency, edge cases
+## Phase 4 — Review (parallel, after the code exists)
+Give each reviewer the diff (`git diff <base>...HEAD`) and the design:
+- **backend-platform-engineer** (fresh instance, code-review skill) — correctness,
+  boundaries, error handling; check DEFINITION_OF_DONE.md
+- **security-engineer** — only if auth, data, uploads, or PII are involved
+- **reliability-engineer** — instrumentation, trace propagation, alertability
 
-## Phase 5: Release plan (sequential)
-Use the release-commander agent to:
-- Create rollout plan with gates and rollback triggers
+## Phase 5 — Fix (sequential, only if 🔴/🟡 findings)
+**backend-platform-engineer** addresses the findings; re-run the suite.
+
+## Phase 6 — Release (sequential)
+**release-commander**: rollout plan with gates and rollback triggers.
+
+## Done gate
+Run `~/.claude/hooks/dod-check.sh` (yarn repos) or the equivalent checks. Then
+synthesize: Decision · Evidence (test output) · Risks · Next actions.
