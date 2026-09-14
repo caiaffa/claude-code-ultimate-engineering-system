@@ -1,60 +1,53 @@
 ---
 name: incident-response
-description: Guide production incident mitigation, investigation, containment, recovery, and structured post-incident follow-up.
+description: Run a production incident end to end — triage, contain, investigate, resolve — then close the loop with a blameless postmortem, failure-mode prevention, and updated standards.
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Mission
-Reduce user impact quickly, stabilize the system safely, and turn operational pain into learning and prevention.
+Stop user impact fast, then make the same failure impossible to repeat.
 
 # When to use
-- Production behavior degrades.
-- Queue stalls or backlog grows.
-- Latency or error rate spikes.
-- Dependency fails or becomes slow.
-- On-call response needs structure.
+- A production incident: outage, latency spike, error spike, data issue.
+- Post-incident learning and prevention.
 
 # Handoff
-- **Receives from:** CLAUDE.md orchestrator (incident category) or direct alert.
-- **Hands off to:** deep-root-cause-investigator (after stabilization), then postmortem-reviewer + incident-learning-loop (after resolution).
+- Receives from: orchestrator (incident category).
+- Hands off to: systematic-debugging (root cause), release-planning (fix rollout).
 
-# Phase 1: Triage (first 5 minutes)
-1. **What is the user impact?** (none / degraded / partial outage / full outage)
-2. **What is the blast radius?** (one user / segment / all users / all services)
-3. **When did it start?** (correlate with deploys, config changes, traffic spikes)
-4. **Is it getting worse?** (check trend in last 15 min)
+# Phase 1 — Triage & contain (URGENT)
+1. **Triage:** user impact? blast radius? getting worse?
+2. **Contain BEFORE diagnosing:** rollback, feature-flag off, rate-limit. Mitigation beats diagnosis when users are impacted.
+3. Declare severity. Assign an incident lead and a comms owner.
 
-# Phase 2: Contain (next 15 minutes)
-- **Can we rollback?** → Do it. Don't debug first.
-- **Can we feature-flag it off?** → Do it.
-- **Can we scale or rate-limit?** → Do it.
-- **Can we redirect traffic?** → Do it.
-- Mitigation before diagnosis when users are impacted.
+# Phase 2 — Investigate
+- Hand the root cause to systematic-debugging: top 3 hypotheses, one signal each.
+- Gather traces, metrics, logs around the start time.
+- Confirm the cause before claiming resolution.
 
-# Phase 3: Investigate (after stabilization)
-1. List top 3 hypotheses ranked by likelihood.
-2. For each hypothesis, list the ONE signal that confirms or eliminates it.
-3. Check signals in order. Eliminate fast.
-4. When cause is found, verify with a second independent signal.
+# Phase 3 — Resolve
+- Confirm user impact has ended (with a signal, not a feeling).
+- Document the timeline as you go.
 
-# Phase 4: Resolve and learn
-1. Confirm user impact has ended.
-2. Document timeline: start → detect → contain → resolve.
-3. Identify contributing factors (not just the trigger).
-4. Schedule postmortem within 48 hours.
+# Phase 4 — Blameless postmortem
+- Write it using `~/.claude/engineering/POSTMORTEM_TEMPLATE.md` (Kovi's standard template).
+- Blameless: describe systems and decisions, never blame a person.
+- PT-BR body; identifiers, queries, and service names in English.
+- Never invent numbers, VINs, timestamps, or names — mark `TBD` instead.
+- Fill the 5 Whys until the systemic cause; action items each get an owner and date.
+- Remove the template's instruction block in the finished postmortem.
 
-# Red flags during incident
-- "Let's monitor" without defining what signal and what threshold.
-- Debugging deep code paths while users are still impacted.
-- Multiple people making changes simultaneously without coordination.
-- Assuming a restart fixed the root cause.
+# Phase 5 — Failure-mode prevention
+For the failure that occurred, ask:
+- What detection would have caught this sooner? (alert + threshold)
+- What guardrail would have prevented it? (test, invariant, gate)
+- What other code has the same failure mode?
+Update the relevant governance doc so the standard now covers it.
 
-# Output format
-1. **Impact:** who, how many, what functionality
-2. **Severity:** SEV1 / SEV2 / SEV3 / SEV4
-3. **Timeline:** when started, when detected, gap
-4. **Immediate containment actions** (prioritized)
-5. **Hypotheses** (ranked, with confirmation signals)
-6. **Investigation plan** (ordered steps)
-7. **Contributing factors** (not just the trigger)
-8. **Long-term fixes** (not just "add monitoring")
-9. **Postmortem actions** (owner + deadline)
+# Red flags
+- Diagnosing while users are still impacted.
+- "Monitor closely" with no named signal/threshold.
+- Postmortem with no class-level prevention.
+
+# Output
+Incident timeline, confirmed root cause, mitigation applied, postmortem with owned action items, standards updated.

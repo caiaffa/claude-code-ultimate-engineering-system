@@ -1,33 +1,26 @@
 ---
-description: "Incident response: triage → contain → investigate → learn"
+description: Incident response — triage, contain, investigate, learn
 ---
 
-## Phase 1: Triage + Contain (staff-sre, urgent)
-Use the staff-sre agent immediately:
-- Assess: $ARGUMENTS
-- Triage user impact and blast radius
-- Contain: rollback, feature-flag, rate-limit — act before deep diagnosis
+Incident: $ARGUMENTS
 
-## Phase 2: Investigate (parallel, after containment)
-Run in parallel:
+## Phase 1 — Triage & contain (URGENT, sequential)
+**reliability-engineer**: assess user impact and blast radius; pull live
+signals from Grafana (Prometheus/Loki) when the MCP is available. Contain
+immediately (rollback, flag, rate-limit). Do NOT parallelize this phase.
+For a severe or unfamiliar incident, run this agent with `model: opus`.
 
-**Subagent A — systematic-debugging (backend-platform-engineer):**
-- List top 3 hypotheses for the root cause
-- For each, identify the ONE confirmation signal
-- Narrow and verify
+## Phase 2 — Investigate (parallel, after containment)
+- **backend-platform-engineer** (systematic-debugging skill) — top 3 hypotheses,
+  one confirmation signal each, tested cheapest-first
+- **reliability-engineer** — traces, metrics, logs around the start time;
+  recent deploys and config changes
 
-**Subagent B — observability-engineer:**
-- Gather relevant traces, metrics, and logs
-- Identify detection gaps
-- Check if existing alerts fired (and when)
-
-## Phase 3: Root cause (sequential)
-Use the backend-platform-engineer agent with deep-root-cause-investigator skill:
-- Build full cause chain: symptom → trigger → local cause → systemic cause
-- Identify failed detection and failed containment
-
-## Phase 4: Learn (sequential)
-Use the staff-sre agent with postmortem-reviewer and incident-learning-loop skills:
-- Fill POSTMORTEM_TEMPLATE.md
-- Identify standards/templates that should change
-- Assign corrective actions with owner + deadline
+## Phase 3 — Resolve & learn (sequential)
+Synthesize the confirmed root cause (full chain: trigger → mechanism → symptom).
+**reliability-engineer** writes the postmortem using
+`~/.claude/engineering/POSTMORTEM_TEMPLATE.md` (Kovi's blameless template):
+PT-BR body, no invented data (mark TBD), 5 Whys, action items with owner and
+date. Save to `~/code/kovi/staff/claude/vault/incidents/<date>-<slug>.md`
+and remove the template's instruction block. Update the relevant governance doc
+in `~/.claude/engineering/` with the failure mode.

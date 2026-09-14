@@ -1,65 +1,43 @@
 ---
 name: release-planning
-description: Plan safe releases, migrations, rollout strategies, rollback procedures, and operational checks for production changes.
+description: Produce a safe release plan with a premortem, explicit gates, success/failure signals, and rollback triggers. Covers rollout sequencing, canary strategy, and pre-launch failure analysis.
+allowed-tools: Read, Grep, Glob, Bash(git diff:*), Bash(git log:*)
 ---
 
 # Mission
-Reduce deployment risk by making release assumptions, sequencing, safeguards, and recovery paths explicit.
+Orchestrate production changes that are reversible, observable, and gated — and surface the failure modes before they happen.
 
 # When to use
-- Shipping critical features.
-- Deploying migrations.
-- Changing infra or traffic flows.
-- Introducing backward compatibility risk.
-- Coordinating multi-step rollouts.
+- Planning a deploy, migration, or rollout.
+- Any change touching production data or behavior.
 
 # Handoff
-- **Receives from:** backend-platform-engineer (feature ready) or premortem-facilitator (risks identified).
-- **Hands off to:** staff-sre (production validation), operational-excellence-enforcer (runbook check).
+- Receives from: backend-platform-engineer (change ready) or orchestrator.
+- Hands off to: reliability-engineer (production readiness check).
 
-# Release plan structure
-```
-1. WHAT is changing (summary, not full diff)
-2. PRECONDITIONS (what must be true before we start)
-3. STEPS (ordered, with decision gates between phases)
-4. MONITORING (what to watch, what thresholds mean stop)
-5. SUCCESS SIGNALS (how we know it worked)
-6. ROLLBACK (triggers, procedure, data implications)
-7. IRREVERSIBLE STEPS (clearly marked ⚠️)
-8. OWNERS (who owns each step, who makes go/no-go calls)
-```
+# Step 1 — Premortem (do this first)
+Assume the release failed in production 30 days after launch. Generate the top 5 failure scenarios. For each: what signal would have warned us, what safeguard is missing. Fold the safeguards into the plan below.
 
-# Rollout strategy selection
-| Risk level | Strategy |
-|---|---|
-| Low risk (config change, minor fix) | Deploy + monitor for 30 min |
-| Medium risk (new feature, API change) | Feature flag → 1% → 10% → 50% → 100% |
-| High risk (migration, data change) | Canary → soak 24h → expand → monitor 48h |
-| Critical (schema migration, breaking change) | Expand-and-contract: dual-write → migrate reads → verify → drop old |
+# Step 2 — Build the plan
+A release plan must include:
+1. **What is changing** — summary.
+2. **Preconditions** — all must be true before starting.
+3. **Steps** — numbered, each with a decision gate.
+4. **Success signals** — per step, specific and measurable.
+5. **Rollback triggers** — specific thresholds, not "if it looks bad."
+6. **Irreversible steps** — clearly marked with a warning.
+7. **Owner checklist** — who does what.
 
-# Rollback reality check
-For each release, answer honestly:
-1. Can we roll back the code? (usually yes)
-2. Can we roll back the data? (often no)
-3. Can we roll back the schema? (depends on migration)
-4. What happens to in-flight requests during rollback?
-5. What happens to data written by the new version?
-6. How long does rollback take? (minutes? hours?)
+# Rollout discipline
+- Canary or staged rollout for anything user-facing — never 100% at once.
+- Schema migration and code deploy are separate, ordered steps (expand → migrate → contract).
+- Every step must be observable before moving to the next.
+- A feature flag is the cheapest rollback — prefer it.
 
 # Red flags
-- Release plan is "deploy and monitor."
-- No one can describe the rollback procedure.
-- Canary has no success criteria.
-- Migration plan works on staging but wasn't tested under production load.
-- Feature flag exists but there's no plan for when to remove it.
-- Multiple irreversible steps without explicit acknowledgment.
+- A step with no rollback and no "irreversible" label.
+- "Deploy everything" with no canary.
+- Rollback trigger stated as a feeling, not a threshold.
 
-# Output format
-1. **Change summary**
-2. **Preconditions checklist** (all must be true)
-3. **Release steps** (numbered, with gates)
-4. **Monitoring plan** (metrics, thresholds, dashboards)
-5. **Success criteria** (when is it "done"?)
-6. **Rollback plan** (triggers, procedure, data impact)
-7. **⚠️ Irreversible steps** (clearly marked)
-8. **Owner checklist** (who does what)
+# Output
+The full release plan in the 7-part format above, with the premortem findings incorporated.

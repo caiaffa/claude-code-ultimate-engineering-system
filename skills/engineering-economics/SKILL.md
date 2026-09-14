@@ -14,7 +14,7 @@ Optimize for overall engineering value rather than technical vanity or narrow lo
 - Making prioritization trade-offs.
 
 # Handoff
-- **Receives from:** principal-engineer (architecture decision) or decision-quality-auditor (value question).
+- **Receives from:** principal-engineer (architecture decision) or prd-review (value question).
 - **Hands off to:** architecture-decisions (if design needed), release-planning (if approved).
 
 # The cost model

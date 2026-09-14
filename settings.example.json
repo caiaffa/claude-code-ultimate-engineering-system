@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-5"
+  },
+  "permissions": {
+    "allow": ["Bash", "Read", "Edit", "Write", "Glob", "Grep", "WebFetch", "WebSearch", "Agent", "Skill", "TodoWrite", "NotebookEdit"],
+    "deny": [
+      "Bash(rm -rf /*)", "Bash(rm -rf ~*)", "Bash(rm -rf $HOME*)",
+      "Bash(git push --force*)", "Bash(git push -f *)",
+      "Bash(curl *| sh*)", "Bash(curl *| bash*)", "Bash(wget *| sh*)",
+      "Read(./.env)", "Read(./.env.*)", "Read(./**/secrets/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write", "hooks": [ { "type": "command", "command": "\"$HOME/.claude/hooks/post-edit-format.sh\"" } ] }
+    ]
+  }
+}

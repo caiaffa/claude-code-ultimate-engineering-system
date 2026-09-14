@@ -14,7 +14,7 @@ Make Node.js services trustworthy under real production load, failure, and opera
 
 # Handoff
 - **Receives from:** backend-platform-engineer (implementation) or systematic-debugging (investigation).
-- **Hands off to:** performance-analysis (if perf issue), otel-observability-architect (monitoring), kubernetes-operability (runtime config).
+- **Hands off to:** performance-analysis (if perf issue), observability (monitoring), production-readiness (runtime config).
 
 # Node.js runtime risks
 | Risk | Symptom | Detection | Fix |

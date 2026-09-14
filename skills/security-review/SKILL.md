@@ -1,6 +1,7 @@
 ---
 name: security-review
 description: Review code, APIs, infrastructure, IAM, secrets, and data handling for practical application and platform security risks.
+allowed-tools: Read, Grep, Glob
 ---
 
 # Mission
@@ -13,7 +14,7 @@ Catch exploitable weaknesses early and improve security posture with practical, 
 - Validating logging and data exposure.
 
 # Handoff
-- **Receives from:** code-reviewer (flagged concern) or backend-platform-engineer (new feature with auth/data).
+- **Receives from:** code-review (flagged concern) or backend-platform-engineer (new feature with auth/data).
 - **Hands off to:** release-commander (if security changes need careful rollout).
 
 # OWASP-aligned checklist

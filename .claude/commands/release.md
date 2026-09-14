@@ -1,21 +1,21 @@
 ---
-description: "Create a release plan with premortem analysis"
+description: Create a release plan with premortem analysis
 ---
 
-## Phase 1: Premortem (parallel)
-Run in parallel:
+Change: $ARGUMENTS
 
-**Subagent A — premortem-facilitator (principal-engineer):**
-- Assume: $ARGUMENTS failed in production 30 days after launch
-- Generate top 5 failure scenarios
-- Identify missing safeguards
+## Phase 1 — Premortem (parallel)
+- **principal-engineer** — assume the change failed in production 30 days after
+  launch; generate the top 5 failure scenarios and missing safeguards
+  (`~/.claude/engineering/PREMORTEM_TEMPLATE.md`)
+- **reliability-engineer** — production readiness against
+  `~/.claude/engineering/SERVICE_SCORECARD.md`
 
-**Subagent B — staff-sre:**
-- Review production readiness against SERVICE_SCORECARD.md
-- Identify operational gaps
+## Phase 2 — Plan (sequential)
+**release-commander**: read the actual diff/migrations, incorporate the
+premortem findings and readiness gaps; produce the step-by-step rollout plan
+with gates, success signals (metric + threshold), and rollback triggers per
+`~/.claude/engineering/RELEASE_RULES.md`.
 
-## Phase 2: Release plan (sequential, after Phase 1)
-Use the release-commander agent to:
-- Incorporate premortem findings and SRE gaps
-- Produce step-by-step rollout plan
-- Include gates, signals, rollback triggers, irreversible step warnings
+If the user wants it saved, write to
+`~/code/kovi/staff/claude/vault/premortems/<date>-<slug>.md`.

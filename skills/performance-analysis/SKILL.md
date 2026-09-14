@@ -1,6 +1,7 @@
 ---
 name: performance-analysis
 description: Analyze bottlenecks and recommend evidence-based improvements across application, database, queue, and infrastructure layers.
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Mission
@@ -14,8 +15,8 @@ Improve performance by identifying true bottlenecks, validating with measurement
 - Scaling costs increase.
 
 # Handoff
-- **Receives from:** staff-sre (production concern) or backend-platform-engineer (performance requirement).
-- **Hands off to:** postgres-performance-and-safety (if DB bottleneck), node-runtime-reliability (if runtime issue), kubernetes-operability (if scaling issue).
+- **Receives from:** reliability-engineer (production concern), systematic-debugging, or backend-platform-engineer.
+- **Hands off to:** database-engineering (if DB bottleneck), node-runtime-reliability (if runtime issue), production-readiness (if scaling issue).
 
 # The performance investigation method
 ```

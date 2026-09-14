@@ -1,6 +1,7 @@
 ---
 name: nestjs-architecture-guardian
 description: Enforce clean NestJS architecture, module boundaries, provider discipline, DTO separation, and maintainable application structure.
+allowed-tools: Read, Grep, Glob
 ---
 
 # Mission
@@ -14,7 +15,7 @@ Protect NestJS services from architectural entropy, framework misuse, and busine
 
 # Handoff
 - **Receives from:** backend-platform-engineer (implementation task).
-- **Hands off to:** code-reviewer (for review), test-strategy (for test plan).
+- **Hands off to:** code-review (for review), test-strategy (for test plan).
 
 # Layer rules
 ```

@@ -1,6 +1,7 @@
 ---
 name: safe-refactoring
 description: Refactor code safely through behavior preservation, protective tests, incremental change sequencing, and risk-aware migration planning.
+allowed-tools: Read, Grep, Glob
 ---
 
 # Mission
@@ -14,8 +15,8 @@ Improve code structure without silently changing system behavior or increasing d
 - Reorganizing domain boundaries.
 
 # Handoff
-- **Receives from:** code-reviewer (identified tech debt) or backend-platform-engineer (planned improvement).
-- **Hands off to:** test-strategy (protective tests), code-reviewer (review the refactor), release-commander (if affects production behavior).
+- **Receives from:** code-review (identified tech debt) or backend-platform-engineer (planned improvement).
+- **Hands off to:** test-strategy (protective tests), code-review (review the refactor), release-commander (if affects production behavior).
 
 # The safe refactoring method
 ```

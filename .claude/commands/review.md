@@ -1,23 +1,27 @@
 ---
-description: "Full code review: correctness + security + tests + observability"
+description: Full code review — correctness, security, reliability
 ---
 
-Run these review subagents in parallel on the code: $ARGUMENTS
+Target: $ARGUMENTS (a PR number, branch, commit range, or "working tree")
 
-**Subagent A — code-reviewer (backend-platform-engineer):**
-- Review for correctness, boundaries, error handling, coupling
-- Check against DEFINITION_OF_DONE.md
-- Classify issues: 🔴 Block / 🟡 Should fix / 🔵 Suggestion / 🟢 Positive
+## Phase 0 — Collect the change (orchestrator)
+Produce the diff once (`git diff <base>...HEAD`, `gh pr diff <n>`, or
+`git diff`) plus the list of touched files. Every reviewer gets this same
+input — never the conversation history.
 
-**Subagent B — security-engineer:**
-- Review for auth, injection, data exposure, secrets
-- Block deploy for critical security issues
+## Phase 1 — Review (parallel)
+- **backend-platform-engineer** (code-review skill) — correctness, boundaries,
+  error handling, coupling, missing tests. Check against
+  `~/.claude/engineering/DEFINITION_OF_DONE.md`.
+- **security-engineer** — auth, injection, data exposure, secrets, tenant
+  isolation. Blocks for critical findings.
+- **reliability-engineer** — instrumentation gaps, trace propagation,
+  alertability, runtime risks (timeouts, shutdown, unbounded concurrency).
 
-**Subagent C — observability-engineer:**
-- Check if new code paths have adequate instrumentation
-- Verify trace propagation, metric coverage, log correlation
+Skip a reviewer only when the diff clearly cannot concern it (e.g. docs-only
+change → skip security), and say so.
 
-After all complete, synthesize:
-1. **Merge verdict:** safe / needs changes / blocked
-2. **Combined findings** (deduplicated, prioritized)
-3. **Missing tests** (specific scenarios)
+## Phase 2 — Synthesize
+One merged verdict: **SAFE / NEEDS CHANGES / BLOCKED**, with every finding
+kept (🔴 block, 🟡 should fix, 🔵 suggestion), deduplicated across reviewers,
+each with `file:line`. Never drop a reviewer's finding.

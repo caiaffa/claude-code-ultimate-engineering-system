@@ -1,0 +1,5 @@
+.DS_Store
+.claude/settings.local.json
+.claude/agent-memory/
+.claude/agent-memory-local/
+skills/**/.claude/

@@ -1,159 +1,88 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
 # ============================================================
-# Claude Code Ultimate Engineering System v3 — Instalador Global
+# Claude Code Ultimate Engineering System v5 — global installer
 # ============================================================
-# Instala agents, commands, skills e CLAUDE.md globalmente
-# para funcionar em QUALQUER projeto.
+# Installs the orchestrator, 6 subagents, slash commands, skills, governance
+# docs and hooks under ~/.claude so they work in EVERY project.
 #
-# Paths usados:
-#   ~/.claude/agents/       → subagents (user-level)
-#   ~/.claude/commands/     → slash commands (user-level)
-#   ~/.claude/skills/       → skills (user-level)
-#   ~/.claude/CLAUDE.md     → orquestrador global
-#   ~/.claude/engineering/  → governance docs + templates
+#   ~/.claude/CLAUDE.md      orchestrator
+#   ~/.claude/agents/        6 subagents
+#   ~/.claude/commands/      slash commands
+#   ~/.claude/skills/        skills (one dir per skill)
+#   ~/.claude/engineering/   governance docs + templates
+#   ~/.claude/hooks/         post-edit formatter + Definition-of-Done gate
+#   ~/.claude/settings.json  merged, never overwritten (see settings.example.json)
+#
+# Everything that already exists is backed up to ~/.claude/backups/<ts>-pre-install/.
 # ============================================================
+set -euo pipefail
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DST="${CLAUDE_HOME:-$HOME/.claude}"
+TS="$(date +%Y%m%d-%H%M%S)"
+BK="$DST/backups/$TS-pre-install"
+G='\033[0;32m'; Y='\033[1;33m'; B='\033[0;34m'; N='\033[0m'
 
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-BOLD='\033[1m'
+echo -e "${B}Claude Code Ultimate Engineering System v5 — installing into $DST${N}"
+mkdir -p "$DST"/{agents,commands,skills,engineering,hooks,backups}
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-echo -e "${BOLD}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║  Claude Code Ultimate Engineering System v3          ║${NC}"
-echo -e "${BOLD}║  Instalação Global                                   ║${NC}"
-echo -e "${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
-echo ""
-
-# ---- Check Claude Code ----
-if ! command -v claude &> /dev/null; then
-    echo -e "${YELLOW}⚠  Claude Code não encontrado no PATH.${NC}"
-    echo -e "   Instale em: https://claude.ai/code"
-    echo -e "   Continuando a instalação dos arquivos..."
-    echo ""
-fi
-
-# ---- Create directories ----
-echo -e "${BLUE}→ Criando diretórios globais...${NC}"
-mkdir -p ~/.claude/agents
-mkdir -p ~/.claude/commands
-mkdir -p ~/.claude/skills
-mkdir -p ~/.claude/engineering
-echo -e "${GREEN}  ✓ ~/.claude/agents/${NC}"
-echo -e "${GREEN}  ✓ ~/.claude/commands/${NC}"
-echo -e "${GREEN}  ✓ ~/.claude/skills/${NC}"
-echo -e "${GREEN}  ✓ ~/.claude/engineering/${NC}"
-echo ""
-
-# ---- Install CLAUDE.md (global orchestrator) ----
-echo -e "${BLUE}→ Instalando CLAUDE.md (orquestrador global)...${NC}"
-if [ -f ~/.claude/CLAUDE.md ]; then
-    cp ~/.claude/CLAUDE.md ~/.claude/CLAUDE.md.backup.$(date +%Y%m%d%H%M%S)
-    echo -e "${YELLOW}  ⚠ Backup do CLAUDE.md existente criado${NC}"
-fi
-cp "$SCRIPT_DIR/CLAUDE.md" ~/.claude/CLAUDE.md
-echo -e "${GREEN}  ✓ ~/.claude/CLAUDE.md${NC}"
-echo ""
-
-# ---- Install agents ----
-echo -e "${BLUE}→ Instalando 7 subagents...${NC}"
-for agent in "$SCRIPT_DIR"/.claude/agents/*.md; do
-    name=$(basename "$agent")
-    cp "$agent" ~/.claude/agents/"$name"
-    echo -e "${GREEN}  ✓ $name${NC}"
+# ---- backup
+mkdir -p "$BK"
+for x in agents commands skills engineering hooks CLAUDE.md settings.json; do
+  [ -e "$DST/$x" ] && cp -R "$DST/$x" "$BK/"
 done
-echo ""
+echo -e "${G}  ✓ backup: $BK${N}"
 
-# ---- Install commands ----
-echo -e "${BLUE}→ Instalando 6 slash commands...${NC}"
-for cmd in "$SCRIPT_DIR"/.claude/commands/*.md; do
-    name=$(basename "$cmd")
-    cp "$cmd" ~/.claude/commands/"$name"
-    echo -e "${GREEN}  ✓ /$name${NC}"
+# ---- remove artifacts superseded since v3 (agents merged, skills consolidated)
+for a in staff-sre observability-engineer; do
+  [ -f "$DST/agents/$a.md" ] && rm -f "$DST/agents/$a.md" && echo -e "${Y}  – removed v3 agent $a (merged into reliability-engineer)${N}"
 done
-echo ""
-
-# ---- Install skills ----
-echo -e "${BLUE}→ Instalando 38 skills...${NC}"
-count=0
-for skill_dir in "$SCRIPT_DIR"/skills/*/; do
-    skill_name=$(basename "$skill_dir")
-    mkdir -p ~/.claude/skills/"$skill_name"
-    cp "$skill_dir"SKILL.md ~/.claude/skills/"$skill_name"/SKILL.md
-    count=$((count + 1))
+for s in adr-reviewer aws-production-systems business-impact-challenger code-reviewer \
+         data-sql-engineering decision-quality-auditor deep-root-cause-investigator design-doc-writer \
+         distributed-systems-skeptic failure-mode-and-effects-engineering high-signal-communication \
+         incident-learning-loop infra-devops invariants-and-contracts-guardian kubernetes-operability \
+         operational-excellence-enforcer otel-observability-architect postgres-performance-and-safety \
+         postmortem-reviewer prd-challenger prd-gap-detector prd-metrics-reviewer premortem-facilitator \
+         redis-bullmq-systems; do
+  [ -d "$DST/skills/$s" ] && [ ! -L "$DST/skills/$s" ] && rm -rf "$DST/skills/$s" && echo -e "${Y}  – removed v3 skill $s (consolidated)${N}"
 done
-# Copy skills root docs
-for doc in "$SCRIPT_DIR"/skills/*.md; do
-    cp "$doc" ~/.claude/skills/
+for f in DEFINITION_OF_DONE.md OBSERVABILITY_STANDARDS.md PROJECT_CONVENTIONS.md RELEASE_RULES.md; do
+  [ -f "$DST/skills/$f" ] && rm -f "$DST/skills/$f"
 done
-echo -e "${GREEN}  ✓ $count skills instaladas${NC}"
-echo ""
 
-# ---- Install governance docs + templates ----
-echo -e "${BLUE}→ Instalando governance docs e templates...${NC}"
-for doc in "$SCRIPT_DIR"/*.md; do
-    name=$(basename "$doc")
-    # Skip README, CLAUDE.md (already installed), QUICKSTART
-    case "$name" in
-        README.md|CLAUDE.md) continue ;;
-    esac
-    cp "$doc" ~/.claude/engineering/"$name"
-    echo -e "${GREEN}  ✓ $name${NC}"
-done
-echo ""
+# ---- install
+cp "$SRC"/.claude/agents/*.md   "$DST/agents/"
+cp "$SRC"/.claude/commands/*.md "$DST/commands/"
+n=0; for d in "$SRC"/skills/*/; do s=$(basename "$d"); mkdir -p "$DST/skills/$s"; cp "$d/SKILL.md" "$DST/skills/$s/SKILL.md"; n=$((n+1)); done
+cp "$SRC"/engineering/*.md      "$DST/engineering/"
+cp "$SRC"/hooks/*.sh            "$DST/hooks/"; chmod +x "$DST"/hooks/*.sh
+cp "$SRC/CLAUDE.md"             "$DST/CLAUDE.md"
+echo -e "${G}  ✓ $(ls "$DST"/agents/*.md | wc -l | tr -d ' ') agents, $(ls "$DST"/commands/*.md | wc -l | tr -d ' ') commands, $n skills, $(ls "$DST"/engineering/*.md | wc -l | tr -d ' ') docs, hooks, CLAUDE.md${N}"
 
-# ---- Update CLAUDE.md to reference global paths ----
-echo -e "${BLUE}→ Atualizando paths no CLAUDE.md para global...${NC}"
+# ---- settings.json: merge only what the system needs; never clobber the user's permissions
+python3 - "$DST/settings.json" <<'PY'
+import json, os, sys
+p = sys.argv[1]
+d = json.load(open(p)) if os.path.exists(p) else {}
+d.setdefault("$schema", "https://json.schemastore.org/claude-code-settings.json")
+env = d.setdefault("env", {})
+env["CLAUDE_CODE_SUBAGENT_MODEL"] = "claude-sonnet-5"   # ad-hoc agents; named agents pin their own model
+hooks = d.setdefault("hooks", {})
+post = hooks.setdefault("PostToolUse", [])
+cmd = '"$HOME/.claude/hooks/post-edit-format.sh"'
+for h in post:
+    for hk in h.get("hooks", []):
+        if hk.get("command", "").endswith("post-edit-format.sh\""):
+            hk["command"] = cmd; break
+    else: continue
+    break
+else:
+    post.append({"matcher": "Edit|Write", "hooks": [{"type": "command", "command": cmd}]})
+json.dump(d, open(p, "w"), indent=2); open(p, "a").write("\n")
+print("  ✓ settings.json merged (env.CLAUDE_CODE_SUBAGENT_MODEL, PostToolUse hook)")
+PY
 
-# Add reference to engineering docs location
-if ! grep -q "engineering/" ~/.claude/CLAUDE.md; then
-    cat >> ~/.claude/CLAUDE.md << 'APPENDEOF'
-
----
-
-## Global installation paths
-
-This system is installed globally. Reference paths:
-- **Agents:** `~/.claude/agents/`
-- **Commands:** `~/.claude/commands/`
-- **Skills:** `~/.claude/skills/`
-- **Governance docs & templates:** `~/.claude/engineering/`
-
-When a skill or agent references a governance doc (e.g., SYSTEM_INVARIANTS.md, DECISION_RULES.md),
-look for it in `~/.claude/engineering/`.
-APPENDEOF
-fi
-echo -e "${GREEN}  ✓ Paths globais adicionados ao CLAUDE.md${NC}"
+# ---- validate the installed copy
+"$SRC/scripts/validate.sh" "$DST"
 echo ""
-
-# ---- Summary ----
-echo -e "${BOLD}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║  Instalação completa!                                ║${NC}"
-echo -e "${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "  ${GREEN}✓${NC} ${BOLD}7${NC} subagents em ~/.claude/agents/"
-echo -e "  ${GREEN}✓${NC} ${BOLD}6${NC} commands em ~/.claude/commands/"
-echo -e "  ${GREEN}✓${NC} ${BOLD}38${NC} skills em ~/.claude/skills/"
-echo -e "  ${GREEN}✓${NC} ${BOLD}19${NC} docs em ~/.claude/engineering/"
-echo -e "  ${GREEN}✓${NC} ${BOLD}1${NC} CLAUDE.md em ~/.claude/"
-echo ""
-echo -e "${BOLD}Como usar:${NC}"
-echo -e "  Abra Claude Code em qualquer projeto e use:"
-echo -e "    ${BLUE}/implement${NC}  — feature end-to-end"
-echo -e "    ${BLUE}/review${NC}    — code review paralelo"
-echo -e "    ${BLUE}/prd${NC}       — revisão de PRD"
-echo -e "    ${BLUE}/adr${NC}       — criar/revisar ADR"
-echo -e "    ${BLUE}/incident${NC}  — resposta a incidente"
-echo -e "    ${BLUE}/release${NC}   — plano de release"
-echo ""
-echo -e "  Ou descreva o que precisa em linguagem natural."
-echo -e "  O orquestrador roteia automaticamente."
-echo ""
-echo -e "${YELLOW}Dica:${NC} Para usar modelos diferentes nos subagents:"
-echo -e "  export CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-5-20250929"
-echo ""
+echo -e "${G}Done.${N} Restart Claude Code, then try: /implement, /review, /debug, /refactor, /onboard, /adr, /rfc, /incident, /release, /prd"
+echo -e "Permissions are NOT changed by this script — see settings.example.json for the recommended allow/deny set."
